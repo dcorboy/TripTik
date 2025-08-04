@@ -9,6 +9,9 @@ const PORT = process.env.PORT || 3000;
 // Middleware to parse JSON bodies
 app.use(express.json());
 
+// Serve static files from the public directory
+app.use(express.static('public'));
+
 // Initialize database
 const db = new Database();
 
