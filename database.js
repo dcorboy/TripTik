@@ -26,10 +26,138 @@ class Database {
       await this.createUsersTable();
       await this.createTripsTable();
       await this.createLegsTable();
+      await this.migrateLegsTable();
       await this.insertSampleData();
     } catch (err) {
       console.error('Error initializing database:', err.message);
     }
+  }
+
+  // Migrate existing legs table to use datetime columns
+  async migrateLegsTable() {
+    return new Promise((resolve, reject) => {
+      // Check if we need to migrate from old date columns to datetime columns
+      this.db.get("PRAGMA table_info(legs)", (err, rows) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        
+        this.db.all("PRAGMA table_info(legs)", (err, columns) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          
+          const hasOldColumns = columns.some(col => col.name === 'departure_date' || col.name === 'arrival_date');
+          const hasNewColumns = columns.some(col => col.name === 'departure_datetime' || col.name === 'arrival_datetime');
+          
+          if (hasOldColumns && !hasNewColumns) {
+            console.log('Migrating legs table to use datetime columns...');
+            
+            // Add new datetime columns
+            this.db.run('ALTER TABLE legs ADD COLUMN departure_datetime TEXT', (err) => {
+              if (err && !err.message.includes('duplicate column')) {
+                console.error('Error adding departure_datetime column:', err.message);
+              }
+              
+              this.db.run('ALTER TABLE legs ADD COLUMN arrival_datetime TEXT', (err) => {
+                if (err && !err.message.includes('duplicate column')) {
+                  console.error('Error adding arrival_datetime column:', err.message);
+                }
+                
+                // Migrate existing data
+                this.db.run(`
+                  UPDATE legs 
+                  SET departure_datetime = departure_date || 'T00:00:00.000Z',
+                      arrival_datetime = arrival_date || 'T00:00:00.000Z'
+                  WHERE departure_datetime IS NULL OR arrival_datetime IS NULL
+                `, (err) => {
+                  if (err) {
+                    console.error('Error migrating data:', err.message);
+                  } else {
+                    console.log('Legs table migration completed.');
+                  }
+                  resolve();
+                });
+              });
+            });
+          } else {
+            resolve();
+          }
+        });
+      });
+    });
+  }
+
+  // Date utility functions
+  formatDateTimeForSQL(dateTime, timezone = 'UTC') {
+    if (!dateTime) return null;
+    
+    // If it's already a string in ISO format, return as is
+    if (typeof dateTime === 'string' && dateTime.includes('T')) {
+      return dateTime;
+    }
+    
+    // If it's a Date object, convert to ISO string
+    if (dateTime instanceof Date) {
+      return dateTime.toISOString();
+    }
+    
+    // If it's just a date string (YYYY-MM-DD), add time
+    if (typeof dateTime === 'string' && dateTime.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      return `${dateTime}T00:00:00.000Z`;
+    }
+    
+    return null;
+  }
+
+  parseDateTimeFromSQL(dateTimeString) {
+    if (!dateTimeString) return null;
+    return new Date(dateTimeString);
+  }
+
+  // Convert local datetime to UTC for storage
+  localToUTC(localDateTime, timezone = 'America/New_York') {
+    if (!localDateTime) return null;
+    
+    // If it's already a Date object, convert to UTC
+    if (localDateTime instanceof Date) {
+      return localDateTime.toISOString();
+    }
+    
+    // If it's a string, parse it and convert to UTC
+    if (typeof localDateTime === 'string') {
+      const date = new Date(localDateTime);
+      return date.toISOString();
+    }
+    
+    return null;
+  }
+
+  // Convert UTC datetime to local timezone for display
+  utcToLocal(utcDateTime, timezone = 'America/New_York') {
+    if (!utcDateTime) return null;
+    
+    const date = new Date(utcDateTime);
+    return date.toLocaleString('en-US', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZoneName: 'short'
+    });
+  }
+
+  // Validate datetime format
+  isValidDateTime(dateTimeString) {
+    if (!dateTimeString) return false;
+    
+    const date = new Date(dateTimeString);
+    return !isNaN(date.getTime());
   }
 
   // Create users table
@@ -73,15 +201,15 @@ class Database {
     });
   }
 
-  // Create legs table
+  // Create legs table with improved datetime support
   createLegsTable() {
     return new Promise((resolve, reject) => {
       this.db.run(`CREATE TABLE IF NOT EXISTS legs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT,
-        departure_date TEXT,
+        departure_datetime TEXT,  -- ISO 8601 format with timezone
         departure_location TEXT,
-        arrival_date TEXT,
+        arrival_datetime TEXT,    -- ISO 8601 format with timezone
         arrival_location TEXT,
         carrier TEXT,
         trip_id INTEGER,
@@ -194,18 +322,18 @@ class Database {
         // Trip 1: Orlando Round Trip (2 legs)
         {
           name: 'Flight to Orlando',
-          departure_date: '2024-06-15',
+          departure_datetime: '2024-06-15T06:30:00.000Z', // 6:30 AM EDT
           departure_location: 'IAD',
-          arrival_date: '2024-06-15',
+          arrival_datetime: '2024-06-15T09:45:00.000Z',   // 9:45 AM EDT
           arrival_location: 'MCO',
           carrier: 'UA237',
           trip_id: 1
         },
         {
           name: 'Flight from Orlando',
-          departure_date: '2024-06-20',
+          departure_datetime: '2024-06-20T15:30:00.000Z', // 3:30 PM EDT
           departure_location: 'MCO',
-          arrival_date: '2024-06-20',
+          arrival_datetime: '2024-06-20T18:45:00.000Z',   // 6:45 PM EDT
           arrival_location: 'IAD',
           carrier: 'UA238',
           trip_id: 1
@@ -213,39 +341,49 @@ class Database {
         // Trip 2: Multi-City Trip (3 legs)
         {
           name: 'Flight to Orlando',
-          departure_date: '2024-07-01',
+          departure_datetime: '2024-07-01T08:00:00.000Z', // 8:00 AM EDT
           departure_location: 'IAD',
-          arrival_date: '2024-07-01',
+          arrival_datetime: '2024-07-01T11:15:00.000Z',   // 11:15 AM EDT
           arrival_location: 'MCO',
           carrier: 'AA1234',
           trip_id: 2
         },
         {
           name: 'Flight to New York',
-          departure_date: '2024-07-05',
+          departure_datetime: '2024-07-05T14:00:00.000Z', // 2:00 PM EDT
           departure_location: 'MCO',
-          arrival_date: '2024-07-05',
+          arrival_datetime: '2024-07-05T17:30:00.000Z',   // 5:30 PM EDT
           arrival_location: 'JFK',
           carrier: 'DL567',
           trip_id: 2
         },
         {
           name: 'Flight back to DC',
-          departure_date: '2024-07-10',
+          departure_datetime: '2024-07-10T10:30:00.000Z', // 10:30 AM EDT
           departure_location: 'JFK',
-          arrival_date: '2024-07-10',
+          arrival_datetime: '2024-07-10T12:00:00.000Z',   // 12:00 PM EDT
           arrival_location: 'IAD',
           carrier: 'UA789',
           trip_id: 2
+        },
+        // Additional test leg with different timezone considerations
+        {
+          name: 'Test Flight',
+          departure_datetime: '2024-08-01T16:00:00.000Z', // 4:00 PM EDT
+          departure_location: 'IAD',
+          arrival_datetime: '2024-08-01T19:30:00.000Z',   // 7:30 PM EDT
+          arrival_location: 'LAX',
+          carrier: 'UA999',
+          trip_id: 1
         }
       ];
 
-      const stmt = this.db.prepare('INSERT INTO legs (name, departure_date, departure_location, arrival_date, arrival_location, carrier, trip_id) VALUES (?, ?, ?, ?, ?, ?, ?)');
+      const stmt = this.db.prepare('INSERT INTO legs (name, departure_datetime, departure_location, arrival_datetime, arrival_location, carrier, trip_id) VALUES (?, ?, ?, ?, ?, ?, ?)');
       let completed = 0;
       let hasError = false;
 
       sampleLegs.forEach(leg => {
-        stmt.run(leg.name, leg.departure_date, leg.departure_location, leg.arrival_date, leg.arrival_location, leg.carrier, leg.trip_id, (err) => {
+        stmt.run(leg.name, leg.departure_datetime, leg.departure_location, leg.arrival_datetime, leg.arrival_location, leg.carrier, leg.trip_id, (err) => {
           if (err && !hasError) {
             console.error('Error inserting sample legs:', err.message);
             hasError = true;
@@ -433,8 +571,8 @@ class Database {
           t.id, 
           t.name, 
           t.description,
-          MIN(l.departure_date) as start_date,
-          MAX(l.arrival_date) as end_date
+          MIN(l.departure_datetime) as start_date,
+          MAX(l.arrival_datetime) as end_date
         FROM trips t
         LEFT JOIN legs l ON t.id = l.trip_id
         WHERE t.user_id = ?
@@ -562,7 +700,7 @@ class Database {
   // Get all legs
   getAllLegs() {
     return new Promise((resolve, reject) => {
-      this.db.all('SELECT * FROM legs ORDER BY departure_date', (err, rows) => {
+      this.db.all('SELECT * FROM legs ORDER BY departure_datetime', (err, rows) => {
         if (err) {
           reject(err);
         } else {
@@ -588,7 +726,7 @@ class Database {
   // Get legs by trip ID
   getLegsByTripId(tripId) {
     return new Promise((resolve, reject) => {
-      this.db.all('SELECT * FROM legs WHERE trip_id = ? ORDER BY departure_date', [tripId], (err, rows) => {
+      this.db.all('SELECT * FROM legs WHERE trip_id = ? ORDER BY departure_datetime', [tripId], (err, rows) => {
         if (err) {
           reject(err);
         } else {
@@ -601,11 +739,11 @@ class Database {
   // Create new leg
   createLeg(legData) {
     return new Promise((resolve, reject) => {
-      const { name, departure_date, departure_location, arrival_date, arrival_location, carrier, trip_id } = legData;
+      const { name, departure_datetime, departure_location, arrival_datetime, arrival_location, carrier, trip_id } = legData;
       const db = this.db;
       
-      this.db.run('INSERT INTO legs (name, departure_date, departure_location, arrival_date, arrival_location, carrier, trip_id) VALUES (?, ?, ?, ?, ?, ?, ?)', 
-        [name, departure_date, departure_location, arrival_date, arrival_location, carrier, trip_id], function(err) {
+      this.db.run('INSERT INTO legs (name, departure_datetime, departure_location, arrival_datetime, arrival_location, carrier, trip_id) VALUES (?, ?, ?, ?, ?, ?, ?)', 
+        [name, departure_datetime, departure_location, arrival_datetime, arrival_location, carrier, trip_id], function(err) {
           if (err) {
             reject(err);
           } else {
@@ -625,7 +763,7 @@ class Database {
   // Update leg
   updateLeg(id, updateData) {
     return new Promise((resolve, reject) => {
-      const { name, departure_date, departure_location, arrival_date, arrival_location, carrier } = updateData;
+      const { name, departure_datetime, departure_location, arrival_datetime, arrival_location, carrier } = updateData;
       const db = this.db;
       
       // First check if leg exists
@@ -647,17 +785,17 @@ class Database {
           updateFields.push('name = ?');
           updateValues.push(name);
         }
-        if (departure_date !== undefined) {
-          updateFields.push('departure_date = ?');
-          updateValues.push(departure_date);
+        if (departure_datetime !== undefined) {
+          updateFields.push('departure_datetime = ?');
+          updateValues.push(departure_datetime);
         }
         if (departure_location !== undefined) {
           updateFields.push('departure_location = ?');
           updateValues.push(departure_location);
         }
-        if (arrival_date !== undefined) {
-          updateFields.push('arrival_date = ?');
-          updateValues.push(arrival_date);
+        if (arrival_datetime !== undefined) {
+          updateFields.push('arrival_datetime = ?');
+          updateValues.push(arrival_datetime);
         }
         if (arrival_location !== undefined) {
           updateFields.push('arrival_location = ?');

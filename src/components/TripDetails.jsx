@@ -19,10 +19,10 @@ function TripDetails({ trip, onBack, apiBase }) {
       }
       const legsData = await response.json();
       
-      // Sort legs by departure_date in chronological order
+      // Sort legs by departure_datetime (or departure_date for backward compatibility) in chronological order
       const sortedLegs = legsData.sort((a, b) => {
-        const dateA = new Date(a.departure_date);
-        const dateB = new Date(b.departure_date);
+        const dateA = new Date(a.departure_datetime || a.departure_date);
+        const dateB = new Date(b.departure_datetime || b.departure_date);
         return dateA - dateB;
       });
       
@@ -47,7 +47,21 @@ function TripDetails({ trip, onBack, apiBase }) {
     if (!dateString) return '';
     return new Date(dateString).toLocaleTimeString('en-US', {
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZoneName: 'short'
+    });
+  };
+
+  const formatDateTime = (dateString) => {
+    if (!dateString) return 'Not specified';
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZoneName: 'short'
     });
   };
 
@@ -93,7 +107,7 @@ function TripDetails({ trip, onBack, apiBase }) {
                   <div className="location-label">Departure</div>
                   <div>{leg.departure_location || 'Not specified'}</div>
                   <div style={{ fontSize: '12px', color: '#999' }}>
-                    {formatDate(leg.departure_date)} {formatTime(leg.departure_date)}
+                    {formatDateTime(leg.departure_datetime || leg.departure_date)}
                   </div>
                 </div>
                 
@@ -101,7 +115,7 @@ function TripDetails({ trip, onBack, apiBase }) {
                   <div className="location-label">Arrival</div>
                   <div>{leg.arrival_location || 'Not specified'}</div>
                   <div style={{ fontSize: '12px', color: '#999' }}>
-                    {formatDate(leg.arrival_date)} {formatTime(leg.arrival_date)}
+                    {formatDateTime(leg.arrival_datetime || leg.arrival_date)}
                   </div>
                 </div>
               </div>
