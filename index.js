@@ -1,6 +1,8 @@
 const express = require('express');
 const Database = require('./database');
 const usersRoutes = require('./routes/users');
+const tripsRoutes = require('./routes/trips');
+const legsRoutes = require('./routes/legs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -33,8 +35,10 @@ app.get('/', (req, res) => {
   res.send('Hello from AI!');
 });
 
-// Mount user routes
+// Mount routes
 app.use('/users', usersRoutes);
+app.use('/trips', tripsRoutes);
+app.use('/legs', legsRoutes);
 
 // Start the server
 app.listen(PORT, () => {

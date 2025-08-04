@@ -83,4 +83,22 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// GET /users/:id/trips - Get trips for a specific user
+router.get('/:id/trips', async (req, res) => {
+  try {
+    const userId = req.params.id;
+    
+    // First check if user exists
+    const user = await req.db.getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const trips = await req.db.getTripsByUserId(userId);
+    res.json(trips);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router; 

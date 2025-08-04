@@ -24,6 +24,8 @@ class Database {
   async initDatabase() {
     try {
       await this.createUsersTable();
+      await this.createTripsTable();
+      await this.createLegsTable();
       await this.insertSampleData();
     } catch (err) {
       console.error('Error initializing database:', err.message);
@@ -37,13 +39,57 @@ class Database {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         email TEXT NOT NULL UNIQUE,
-        age INTEGER
+        age INTEGER,
+        trips TEXT DEFAULT '[]'
       )`, (err) => {
         if (err) {
           console.error('Error creating table:', err.message);
           reject(err);
         } else {
           console.log('Users table created or already exists.');
+          resolve();
+        }
+      });
+    });
+  }
+
+  // Create trips table
+  createTripsTable() {
+    return new Promise((resolve, reject) => {
+      this.db.run(`CREATE TABLE IF NOT EXISTS trips (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        description TEXT,
+        legs TEXT DEFAULT '[]',
+        user_id INTEGER,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+      )`, (err) => {
+        if (err) {
+          console.error('Error creating trips table:', err.message);
+          reject(err);
+        } else {
+          console.log('Trips table created or already exists.');
+          resolve();
+        }
+      });
+    });
+  }
+
+  // Create legs table
+  createLegsTable() {
+    return new Promise((resolve, reject) => {
+      this.db.run(`CREATE TABLE IF NOT EXISTS legs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        data TEXT,
+        trip_id INTEGER,
+        order_index INTEGER DEFAULT 0,
+        FOREIGN KEY (trip_id) REFERENCES trips (id)
+      )`, (err) => {
+        if (err) {
+          console.error('Error creating legs table:', err.message);
+          reject(err);
+        } else {
+          console.log('Legs table created or already exists.');
           resolve();
         }
       });
@@ -226,6 +272,306 @@ class Database {
             reject(err);
           } else {
             resolve({ message: 'User deleted successfully', user: row });
+          }
+        });
+      });
+    });
+  }
+
+  // ===== TRIPS METHODS =====
+
+  // Get all trips
+  getAllTrips() {
+    return new Promise((resolve, reject) => {
+      this.db.all('SELECT * FROM trips', (err, rows) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(rows);
+        }
+      });
+    });
+  }
+
+  // Get trip by ID
+  getTripById(id) {
+    return new Promise((resolve, reject) => {
+      this.db.get('SELECT * FROM trips WHERE id = ?', [id], (err, row) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(row);
+        }
+      });
+    });
+  }
+
+  // Get trips by user ID
+  getTripsByUserId(userId) {
+    return new Promise((resolve, reject) => {
+      this.db.all('SELECT id, name, description FROM trips WHERE user_id = ?', [userId], (err, rows) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(rows);
+        }
+      });
+    });
+  }
+
+  // Create new trip
+  createTrip(tripData) {
+    return new Promise((resolve, reject) => {
+      const { name, description, user_id } = tripData;
+      const db = this.db;
+      
+      this.db.run('INSERT INTO trips (name, description, user_id) VALUES (?, ?, ?)', 
+        [name, description, user_id], function(err) {
+          if (err) {
+            reject(err);
+          } else {
+            // Get the inserted trip
+            db.get('SELECT * FROM trips WHERE id = ?', [this.lastID], (err, row) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(row);
+              }
+            });
+          }
+        });
+    });
+  }
+
+  // Update trip
+  updateTrip(id, updateData) {
+    return new Promise((resolve, reject) => {
+      const { name, description, legs } = updateData;
+      const db = this.db;
+      
+      // First check if trip exists
+      this.db.get('SELECT * FROM trips WHERE id = ?', [id], (err, row) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        if (!row) {
+          reject(new Error('Trip not found'));
+          return;
+        }
+        
+        // Update the trip
+        const updateFields = [];
+        const updateValues = [];
+        
+        if (name !== undefined) {
+          updateFields.push('name = ?');
+          updateValues.push(name);
+        }
+        if (description !== undefined) {
+          updateFields.push('description = ?');
+          updateValues.push(description);
+        }
+        if (legs !== undefined) {
+          updateFields.push('legs = ?');
+          updateValues.push(JSON.stringify(legs));
+        }
+        
+        if (updateFields.length === 0) {
+          reject(new Error('No fields to update'));
+          return;
+        }
+        
+        updateValues.push(id);
+        const updateQuery = `UPDATE trips SET ${updateFields.join(', ')} WHERE id = ?`;
+        
+        this.db.run(updateQuery, updateValues, function(err) {
+          if (err) {
+            reject(err);
+            return;
+          }
+          
+          // Get the updated trip
+          db.get('SELECT * FROM trips WHERE id = ?', [id], (err, row) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve(row);
+            }
+          });
+        });
+      });
+    });
+  }
+
+  // Delete trip
+  deleteTrip(id) {
+    return new Promise((resolve, reject) => {
+      // First check if trip exists
+      this.db.get('SELECT * FROM trips WHERE id = ?', [id], (err, row) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        if (!row) {
+          reject(new Error('Trip not found'));
+          return;
+        }
+        
+        // Delete the trip
+        this.db.run('DELETE FROM trips WHERE id = ?', [id], function(err) {
+          if (err) {
+            reject(err);
+          } else {
+            resolve({ message: 'Trip deleted successfully', trip: row });
+          }
+        });
+      });
+    });
+  }
+
+  // ===== LEGS METHODS =====
+
+  // Get all legs
+  getAllLegs() {
+    return new Promise((resolve, reject) => {
+      this.db.all('SELECT * FROM legs ORDER BY order_index', (err, rows) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(rows);
+        }
+      });
+    });
+  }
+
+  // Get leg by ID
+  getLegById(id) {
+    return new Promise((resolve, reject) => {
+      this.db.get('SELECT * FROM legs WHERE id = ?', [id], (err, row) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(row);
+        }
+      });
+    });
+  }
+
+  // Get legs by trip ID
+  getLegsByTripId(tripId) {
+    return new Promise((resolve, reject) => {
+      this.db.all('SELECT * FROM legs WHERE trip_id = ? ORDER BY order_index', [tripId], (err, rows) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(rows);
+        }
+      });
+    });
+  }
+
+  // Create new leg
+  createLeg(legData) {
+    return new Promise((resolve, reject) => {
+      const { data, trip_id, order_index } = legData;
+      const db = this.db;
+      
+      this.db.run('INSERT INTO legs (data, trip_id, order_index) VALUES (?, ?, ?)', 
+        [data, trip_id, order_index || 0], function(err) {
+          if (err) {
+            reject(err);
+          } else {
+            // Get the inserted leg
+            db.get('SELECT * FROM legs WHERE id = ?', [this.lastID], (err, row) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(row);
+              }
+            });
+          }
+        });
+    });
+  }
+
+  // Update leg
+  updateLeg(id, updateData) {
+    return new Promise((resolve, reject) => {
+      const { data, order_index } = updateData;
+      const db = this.db;
+      
+      // First check if leg exists
+      this.db.get('SELECT * FROM legs WHERE id = ?', [id], (err, row) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        if (!row) {
+          reject(new Error('Leg not found'));
+          return;
+        }
+        
+        // Update the leg
+        const updateFields = [];
+        const updateValues = [];
+        
+        if (data !== undefined) {
+          updateFields.push('data = ?');
+          updateValues.push(data);
+        }
+        if (order_index !== undefined) {
+          updateFields.push('order_index = ?');
+          updateValues.push(order_index);
+        }
+        
+        if (updateFields.length === 0) {
+          reject(new Error('No fields to update'));
+          return;
+        }
+        
+        updateValues.push(id);
+        const updateQuery = `UPDATE legs SET ${updateFields.join(', ')} WHERE id = ?`;
+        
+        this.db.run(updateQuery, updateValues, function(err) {
+          if (err) {
+            reject(err);
+            return;
+          }
+          
+          // Get the updated leg
+          db.get('SELECT * FROM legs WHERE id = ?', [id], (err, row) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve(row);
+            }
+          });
+        });
+      });
+    });
+  }
+
+  // Delete leg
+  deleteLeg(id) {
+    return new Promise((resolve, reject) => {
+      // First check if leg exists
+      this.db.get('SELECT * FROM legs WHERE id = ?', [id], (err, row) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        if (!row) {
+          reject(new Error('Leg not found'));
+          return;
+        }
+        
+        // Delete the leg
+        this.db.run('DELETE FROM legs WHERE id = ?', [id], function(err) {
+          if (err) {
+            reject(err);
+          } else {
+            resolve({ message: 'Leg deleted successfully', leg: row });
           }
         });
       });
