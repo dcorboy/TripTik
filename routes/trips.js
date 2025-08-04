@@ -30,13 +30,13 @@ router.get('/:id', async (req, res) => {
 // POST /trips - Create a new trip
 router.post('/', async (req, res) => {
   try {
-    const { name, description, user_id } = req.body;
+    const { name, description, start_date, end_date, user_id } = req.body;
     
     if (!name || !user_id) {
       return res.status(400).json({ error: 'Name and user_id are required' });
     }
     
-    const newTrip = await req.db.createTrip({ name, description, user_id });
+    const newTrip = await req.db.createTrip({ name, description, start_date, end_date, user_id });
     res.status(201).json(newTrip);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -47,9 +47,9 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const tripId = req.params.id;
-    const { name, description, legs } = req.body;
+    const { name, description, start_date, end_date, legs } = req.body;
     
-    const updatedTrip = await req.db.updateTrip(tripId, { name, description, legs });
+    const updatedTrip = await req.db.updateTrip(tripId, { name, description, start_date, end_date, legs });
     res.json(updatedTrip);
   } catch (err) {
     if (err.message === 'Trip not found') {

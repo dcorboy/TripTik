@@ -60,6 +60,8 @@ class Database {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         description TEXT,
+        start_date TEXT,
+        end_date TEXT,
         legs TEXT DEFAULT '[]',
         user_id INTEGER,
         FOREIGN KEY (user_id) REFERENCES users (id)
@@ -80,7 +82,11 @@ class Database {
     return new Promise((resolve, reject) => {
       this.db.run(`CREATE TABLE IF NOT EXISTS legs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        data TEXT,
+        name TEXT,
+        departure_date TEXT,
+        departure_location TEXT,
+        arrival_date TEXT,
+        arrival_location TEXT,
         trip_id INTEGER,
         order_index INTEGER DEFAULT 0,
         FOREIGN KEY (trip_id) REFERENCES trips (id)
@@ -322,11 +328,11 @@ class Database {
   // Create new trip
   createTrip(tripData) {
     return new Promise((resolve, reject) => {
-      const { name, description, user_id } = tripData;
+      const { name, description, start_date, end_date, user_id } = tripData;
       const db = this.db;
       
-      this.db.run('INSERT INTO trips (name, description, user_id) VALUES (?, ?, ?)', 
-        [name, description, user_id], function(err) {
+      this.db.run('INSERT INTO trips (name, description, start_date, end_date, user_id) VALUES (?, ?, ?, ?, ?)', 
+        [name, description, start_date, end_date, user_id], function(err) {
           if (err) {
             reject(err);
           } else {
@@ -346,7 +352,7 @@ class Database {
   // Update trip
   updateTrip(id, updateData) {
     return new Promise((resolve, reject) => {
-      const { name, description, legs } = updateData;
+      const { name, description, start_date, end_date, legs } = updateData;
       const db = this.db;
       
       // First check if trip exists
@@ -371,6 +377,14 @@ class Database {
         if (description !== undefined) {
           updateFields.push('description = ?');
           updateValues.push(description);
+        }
+        if (start_date !== undefined) {
+          updateFields.push('start_date = ?');
+          updateValues.push(start_date);
+        }
+        if (end_date !== undefined) {
+          updateFields.push('end_date = ?');
+          updateValues.push(end_date);
         }
         if (legs !== undefined) {
           updateFields.push('legs = ?');
