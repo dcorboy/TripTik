@@ -83,6 +83,7 @@ class Database {
         departure_location TEXT,
         arrival_date TEXT,
         arrival_location TEXT,
+        carrier TEXT,
         trip_id INTEGER,
         FOREIGN KEY (trip_id) REFERENCES trips (id)
       )`, (err) => {
@@ -197,6 +198,7 @@ class Database {
           departure_location: 'IAD',
           arrival_date: '2024-06-15',
           arrival_location: 'MCO',
+          carrier: 'UA237',
           trip_id: 1
         },
         {
@@ -205,6 +207,7 @@ class Database {
           departure_location: 'MCO',
           arrival_date: '2024-06-20',
           arrival_location: 'IAD',
+          carrier: 'UA238',
           trip_id: 1
         },
         // Trip 2: Multi-City Trip (3 legs)
@@ -214,6 +217,7 @@ class Database {
           departure_location: 'IAD',
           arrival_date: '2024-07-01',
           arrival_location: 'MCO',
+          carrier: 'AA1234',
           trip_id: 2
         },
         {
@@ -222,6 +226,7 @@ class Database {
           departure_location: 'MCO',
           arrival_date: '2024-07-05',
           arrival_location: 'JFK',
+          carrier: 'DL567',
           trip_id: 2
         },
         {
@@ -230,16 +235,17 @@ class Database {
           departure_location: 'JFK',
           arrival_date: '2024-07-10',
           arrival_location: 'IAD',
+          carrier: 'UA789',
           trip_id: 2
         }
       ];
 
-      const stmt = this.db.prepare('INSERT INTO legs (name, departure_date, departure_location, arrival_date, arrival_location, trip_id) VALUES (?, ?, ?, ?, ?, ?)');
+      const stmt = this.db.prepare('INSERT INTO legs (name, departure_date, departure_location, arrival_date, arrival_location, carrier, trip_id) VALUES (?, ?, ?, ?, ?, ?, ?)');
       let completed = 0;
       let hasError = false;
 
       sampleLegs.forEach(leg => {
-        stmt.run(leg.name, leg.departure_date, leg.departure_location, leg.arrival_date, leg.arrival_location, leg.trip_id, (err) => {
+        stmt.run(leg.name, leg.departure_date, leg.departure_location, leg.arrival_date, leg.arrival_location, leg.carrier, leg.trip_id, (err) => {
           if (err && !hasError) {
             console.error('Error inserting sample legs:', err.message);
             hasError = true;
@@ -595,11 +601,11 @@ class Database {
   // Create new leg
   createLeg(legData) {
     return new Promise((resolve, reject) => {
-      const { name, departure_date, departure_location, arrival_date, arrival_location, trip_id } = legData;
+      const { name, departure_date, departure_location, arrival_date, arrival_location, carrier, trip_id } = legData;
       const db = this.db;
       
-      this.db.run('INSERT INTO legs (name, departure_date, departure_location, arrival_date, arrival_location, trip_id) VALUES (?, ?, ?, ?, ?, ?)', 
-        [name, departure_date, departure_location, arrival_date, arrival_location, trip_id], function(err) {
+      this.db.run('INSERT INTO legs (name, departure_date, departure_location, arrival_date, arrival_location, carrier, trip_id) VALUES (?, ?, ?, ?, ?, ?, ?)', 
+        [name, departure_date, departure_location, arrival_date, arrival_location, carrier, trip_id], function(err) {
           if (err) {
             reject(err);
           } else {
@@ -619,7 +625,7 @@ class Database {
   // Update leg
   updateLeg(id, updateData) {
     return new Promise((resolve, reject) => {
-      const { name, departure_date, departure_location, arrival_date, arrival_location } = updateData;
+      const { name, departure_date, departure_location, arrival_date, arrival_location, carrier } = updateData;
       const db = this.db;
       
       // First check if leg exists
@@ -656,6 +662,10 @@ class Database {
         if (arrival_location !== undefined) {
           updateFields.push('arrival_location = ?');
           updateValues.push(arrival_location);
+        }
+        if (carrier !== undefined) {
+          updateFields.push('carrier = ?');
+          updateValues.push(carrier);
         }
         
         if (updateFields.length === 0) {
