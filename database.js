@@ -26,68 +26,10 @@ class Database {
       await this.createUsersTable();
       await this.createTripsTable();
       await this.createLegsTable();
-      await this.migrateLegsTable();
       await this.insertSampleData();
     } catch (err) {
       console.error('Error initializing database:', err.message);
     }
-  }
-
-  // Migrate existing legs table to use datetime columns
-  async migrateLegsTable() {
-    return new Promise((resolve, reject) => {
-      // Check if we need to migrate from old date columns to datetime columns
-      this.db.get("PRAGMA table_info(legs)", (err, rows) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        
-        this.db.all("PRAGMA table_info(legs)", (err, columns) => {
-          if (err) {
-            reject(err);
-            return;
-          }
-          
-          const hasOldColumns = columns.some(col => col.name === 'departure_date' || col.name === 'arrival_date');
-          const hasNewColumns = columns.some(col => col.name === 'departure_datetime' || col.name === 'arrival_datetime');
-          
-          if (hasOldColumns && !hasNewColumns) {
-            console.log('Migrating legs table to use datetime columns...');
-            
-            // Add new datetime columns
-            this.db.run('ALTER TABLE legs ADD COLUMN departure_datetime TEXT', (err) => {
-              if (err && !err.message.includes('duplicate column')) {
-                console.error('Error adding departure_datetime column:', err.message);
-              }
-              
-              this.db.run('ALTER TABLE legs ADD COLUMN arrival_datetime TEXT', (err) => {
-                if (err && !err.message.includes('duplicate column')) {
-                  console.error('Error adding arrival_datetime column:', err.message);
-                }
-                
-                // Migrate existing data
-                this.db.run(`
-                  UPDATE legs 
-                  SET departure_datetime = departure_date || 'T00:00:00.000Z',
-                      arrival_datetime = arrival_date || 'T00:00:00.000Z'
-                  WHERE departure_datetime IS NULL OR arrival_datetime IS NULL
-                `, (err) => {
-                  if (err) {
-                    console.error('Error migrating data:', err.message);
-                  } else {
-                    console.log('Legs table migration completed.');
-                  }
-                  resolve();
-                });
-              });
-            });
-          } else {
-            resolve();
-          }
-        });
-      });
-    });
   }
 
   // Date utility functions
@@ -201,7 +143,7 @@ class Database {
     });
   }
 
-  // Create legs table with improved datetime support
+  // Create legs table with datetime support
   createLegsTable() {
     return new Promise((resolve, reject) => {
       this.db.run(`CREATE TABLE IF NOT EXISTS legs (
