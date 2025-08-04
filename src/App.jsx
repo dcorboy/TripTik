@@ -18,7 +18,8 @@ function App() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`${API_BASE}/trips`);
+      // Using hardcoded user ID 1 for now
+      const response = await fetch(`${API_BASE}/users/1/trips`);
       if (!response.ok) {
         throw new Error('Failed to fetch trips');
       }
