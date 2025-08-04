@@ -47,9 +47,9 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const tripId = req.params.id;
-    const { name, description, start_date, end_date, legs } = req.body;
+    const { name, description, start_date, end_date } = req.body;
     
-    const updatedTrip = await req.db.updateTrip(tripId, { name, description, start_date, end_date, legs });
+    const updatedTrip = await req.db.updateTrip(tripId, { name, description, start_date, end_date });
     res.json(updatedTrip);
   } catch (err) {
     if (err.message === 'Trip not found') {

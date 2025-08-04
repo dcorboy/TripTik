@@ -39,8 +39,7 @@ class Database {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         email TEXT NOT NULL UNIQUE,
-        age INTEGER,
-        trips TEXT DEFAULT '[]'
+        age INTEGER
       )`, (err) => {
         if (err) {
           console.error('Error creating table:', err.message);
@@ -62,7 +61,6 @@ class Database {
         description TEXT,
         start_date TEXT,
         end_date TEXT,
-        legs TEXT DEFAULT '[]',
         user_id INTEGER,
         FOREIGN KEY (user_id) REFERENCES users (id)
       )`, (err) => {
@@ -467,7 +465,7 @@ class Database {
   // Update trip
   updateTrip(id, updateData) {
     return new Promise((resolve, reject) => {
-      const { name, description, start_date, end_date, legs } = updateData;
+      const { name, description, start_date, end_date } = updateData;
       const db = this.db;
       
       // First check if trip exists
@@ -500,10 +498,6 @@ class Database {
         if (end_date !== undefined) {
           updateFields.push('end_date = ?');
           updateValues.push(end_date);
-        }
-        if (legs !== undefined) {
-          updateFields.push('legs = ?');
-          updateValues.push(JSON.stringify(legs));
         }
         
         if (updateFields.length === 0) {
