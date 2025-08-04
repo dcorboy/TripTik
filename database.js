@@ -59,8 +59,6 @@ class Database {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         description TEXT,
-        start_date TEXT,
-        end_date TEXT,
         user_id INTEGER,
         FOREIGN KEY (user_id) REFERENCES users (id)
       )`, (err) => {
@@ -157,25 +155,21 @@ class Database {
         { 
           name: 'Orlando Round Trip', 
           description: 'A round trip to Orlando', 
-          start_date: '2024-06-15',
-          end_date: '2024-06-20',
           user_id: 1 
         },
         { 
           name: 'Multi-City Trip', 
           description: 'A trip with multiple destinations', 
-          start_date: '2024-07-01',
-          end_date: '2024-07-10',
           user_id: 1 
         }
       ];
 
-      const stmt = this.db.prepare('INSERT INTO trips (name, description, start_date, end_date, user_id) VALUES (?, ?, ?, ?, ?)');
+      const stmt = this.db.prepare('INSERT INTO trips (name, description, user_id) VALUES (?, ?, ?)');
       let completed = 0;
       let hasError = false;
 
       sampleTrips.forEach(trip => {
-        stmt.run(trip.name, trip.description, trip.start_date, trip.end_date, trip.user_id, (err) => {
+        stmt.run(trip.name, trip.description, trip.user_id, (err) => {
           if (err && !hasError) {
             console.error('Error inserting sample trips:', err.message);
             hasError = true;
@@ -425,10 +419,22 @@ class Database {
     });
   }
 
-  // Get trips by user ID
+  // Get trips by user ID with calculated start and end dates
   getTripsByUserId(userId) {
     return new Promise((resolve, reject) => {
-      this.db.all('SELECT id, name, description FROM trips WHERE user_id = ?', [userId], (err, rows) => {
+      this.db.all(`
+        SELECT 
+          t.id, 
+          t.name, 
+          t.description,
+          MIN(l.departure_date) as start_date,
+          MAX(l.arrival_date) as end_date
+        FROM trips t
+        LEFT JOIN legs l ON t.id = l.trip_id
+        WHERE t.user_id = ?
+        GROUP BY t.id, t.name, t.description
+        ORDER BY t.id
+      `, [userId], (err, rows) => {
         if (err) {
           reject(err);
         } else {
@@ -441,11 +447,11 @@ class Database {
   // Create new trip
   createTrip(tripData) {
     return new Promise((resolve, reject) => {
-      const { name, description, start_date, end_date, user_id } = tripData;
+      const { name, description, user_id } = tripData;
       const db = this.db;
       
-      this.db.run('INSERT INTO trips (name, description, start_date, end_date, user_id) VALUES (?, ?, ?, ?, ?)', 
-        [name, description, start_date, end_date, user_id], function(err) {
+      this.db.run('INSERT INTO trips (name, description, user_id) VALUES (?, ?, ?)', 
+        [name, description, user_id], function(err) {
           if (err) {
             reject(err);
           } else {
@@ -465,7 +471,7 @@ class Database {
   // Update trip
   updateTrip(id, updateData) {
     return new Promise((resolve, reject) => {
-      const { name, description, start_date, end_date } = updateData;
+      const { name, description } = updateData;
       const db = this.db;
       
       // First check if trip exists
@@ -490,14 +496,6 @@ class Database {
         if (description !== undefined) {
           updateFields.push('description = ?');
           updateValues.push(description);
-        }
-        if (start_date !== undefined) {
-          updateFields.push('start_date = ?');
-          updateValues.push(start_date);
-        }
-        if (end_date !== undefined) {
-          updateFields.push('end_date = ?');
-          updateValues.push(end_date);
         }
         
         if (updateFields.length === 0) {
