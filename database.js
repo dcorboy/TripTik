@@ -488,11 +488,11 @@ class Database {
   // Create new leg
   createLeg(legData) {
     return new Promise((resolve, reject) => {
-      const { data, trip_id, order_index } = legData;
+      const { name, departure_date, departure_location, arrival_date, arrival_location, trip_id, order_index } = legData;
       const db = this.db;
       
-      this.db.run('INSERT INTO legs (data, trip_id, order_index) VALUES (?, ?, ?)', 
-        [data, trip_id, order_index || 0], function(err) {
+      this.db.run('INSERT INTO legs (name, departure_date, departure_location, arrival_date, arrival_location, trip_id, order_index) VALUES (?, ?, ?, ?, ?, ?, ?)', 
+        [name, departure_date, departure_location, arrival_date, arrival_location, trip_id, order_index || 0], function(err) {
           if (err) {
             reject(err);
           } else {
@@ -512,7 +512,7 @@ class Database {
   // Update leg
   updateLeg(id, updateData) {
     return new Promise((resolve, reject) => {
-      const { data, order_index } = updateData;
+      const { name, departure_date, departure_location, arrival_date, arrival_location, order_index } = updateData;
       const db = this.db;
       
       // First check if leg exists
@@ -530,9 +530,25 @@ class Database {
         const updateFields = [];
         const updateValues = [];
         
-        if (data !== undefined) {
-          updateFields.push('data = ?');
-          updateValues.push(data);
+        if (name !== undefined) {
+          updateFields.push('name = ?');
+          updateValues.push(name);
+        }
+        if (departure_date !== undefined) {
+          updateFields.push('departure_date = ?');
+          updateValues.push(departure_date);
+        }
+        if (departure_location !== undefined) {
+          updateFields.push('departure_location = ?');
+          updateValues.push(departure_location);
+        }
+        if (arrival_date !== undefined) {
+          updateFields.push('arrival_date = ?');
+          updateValues.push(arrival_date);
+        }
+        if (arrival_location !== undefined) {
+          updateFields.push('arrival_location = ?');
+          updateValues.push(arrival_location);
         }
         if (order_index !== undefined) {
           updateFields.push('order_index = ?');

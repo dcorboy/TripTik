@@ -30,13 +30,13 @@ router.get('/:id', async (req, res) => {
 // POST /legs - Create a new leg
 router.post('/', async (req, res) => {
   try {
-    const { data, trip_id, order_index } = req.body;
+    const { name, departure_date, departure_location, arrival_date, arrival_location, trip_id, order_index } = req.body;
     
-    if (!data || !trip_id) {
-      return res.status(400).json({ error: 'Data and trip_id are required' });
+    if (!name || !trip_id) {
+      return res.status(400).json({ error: 'Name and trip_id are required' });
     }
     
-    const newLeg = await req.db.createLeg({ data, trip_id, order_index });
+    const newLeg = await req.db.createLeg({ name, departure_date, departure_location, arrival_date, arrival_location, trip_id, order_index });
     res.status(201).json(newLeg);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -47,9 +47,9 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const legId = req.params.id;
-    const { data, order_index } = req.body;
+    const { name, departure_date, departure_location, arrival_date, arrival_location, order_index } = req.body;
     
-    const updatedLeg = await req.db.updateLeg(legId, { data, order_index });
+    const updatedLeg = await req.db.updateLeg(legId, { name, departure_date, departure_location, arrival_date, arrival_location, order_index });
     res.json(updatedLeg);
   } catch (err) {
     if (err.message === 'Leg not found') {
