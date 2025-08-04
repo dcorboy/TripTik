@@ -109,7 +109,11 @@ class Database {
           console.error('Error checking users count:', err.message);
           reject(err);
         } else if (row.count === 0) {
-          this.insertSampleUsers().then(resolve).catch(reject);
+          this.insertSampleUsers()
+            .then(() => this.insertSampleTrips())
+            .then(() => this.insertSampleLegs())
+            .then(resolve)
+            .catch(reject);
         } else {
           resolve();
         }
@@ -140,7 +144,119 @@ class Database {
           completed++;
           if (completed === sampleUsers.length && !hasError) {
             stmt.finalize();
-            console.log('Sample data inserted.');
+            console.log('Sample users inserted.');
+            resolve();
+          }
+        });
+      });
+    });
+  }
+
+  // Insert sample trips
+  insertSampleTrips() {
+    return new Promise((resolve, reject) => {
+      const sampleTrips = [
+        { 
+          name: 'Orlando Round Trip', 
+          description: 'A round trip to Orlando', 
+          start_date: '2024-06-15',
+          end_date: '2024-06-20',
+          user_id: 1 
+        },
+        { 
+          name: 'Multi-City Trip', 
+          description: 'A trip with multiple destinations', 
+          start_date: '2024-07-01',
+          end_date: '2024-07-10',
+          user_id: 1 
+        }
+      ];
+
+      const stmt = this.db.prepare('INSERT INTO trips (name, description, start_date, end_date, user_id) VALUES (?, ?, ?, ?, ?)');
+      let completed = 0;
+      let hasError = false;
+
+      sampleTrips.forEach(trip => {
+        stmt.run(trip.name, trip.description, trip.start_date, trip.end_date, trip.user_id, (err) => {
+          if (err && !hasError) {
+            console.error('Error inserting sample trips:', err.message);
+            hasError = true;
+            reject(err);
+          }
+          completed++;
+          if (completed === sampleTrips.length && !hasError) {
+            stmt.finalize();
+            console.log('Sample trips inserted.');
+            resolve();
+          }
+        });
+      });
+    });
+  }
+
+  // Insert sample legs
+  insertSampleLegs() {
+    return new Promise((resolve, reject) => {
+      const sampleLegs = [
+        // Trip 1: Orlando Round Trip (2 legs)
+        {
+          name: 'Flight to Orlando',
+          departure_date: '2024-06-15',
+          departure_location: 'IAD',
+          arrival_date: '2024-06-15',
+          arrival_location: 'MCO',
+          trip_id: 1
+        },
+        {
+          name: 'Flight from Orlando',
+          departure_date: '2024-06-20',
+          departure_location: 'MCO',
+          arrival_date: '2024-06-20',
+          arrival_location: 'IAD',
+          trip_id: 1
+        },
+        // Trip 2: Multi-City Trip (3 legs)
+        {
+          name: 'Flight to Orlando',
+          departure_date: '2024-07-01',
+          departure_location: 'IAD',
+          arrival_date: '2024-07-01',
+          arrival_location: 'MCO',
+          trip_id: 2
+        },
+        {
+          name: 'Flight to New York',
+          departure_date: '2024-07-05',
+          departure_location: 'MCO',
+          arrival_date: '2024-07-05',
+          arrival_location: 'JFK',
+          trip_id: 2
+        },
+        {
+          name: 'Flight back to DC',
+          departure_date: '2024-07-10',
+          departure_location: 'JFK',
+          arrival_date: '2024-07-10',
+          arrival_location: 'IAD',
+          trip_id: 2
+        }
+      ];
+
+      const stmt = this.db.prepare('INSERT INTO legs (name, departure_date, departure_location, arrival_date, arrival_location, trip_id) VALUES (?, ?, ?, ?, ?, ?)');
+      let completed = 0;
+      let hasError = false;
+
+      sampleLegs.forEach(leg => {
+        stmt.run(leg.name, leg.departure_date, leg.departure_location, leg.arrival_date, leg.arrival_location, leg.trip_id, (err) => {
+          if (err && !hasError) {
+            console.error('Error inserting sample legs:', err.message);
+            hasError = true;
+            reject(err);
+          }
+          completed++;
+          if (completed === sampleLegs.length && !hasError) {
+            stmt.finalize();
+            console.log('Sample legs inserted.');
             resolve();
           }
         });
