@@ -88,7 +88,6 @@ class Database {
         arrival_date TEXT,
         arrival_location TEXT,
         trip_id INTEGER,
-        order_index INTEGER DEFAULT 0,
         FOREIGN KEY (trip_id) REFERENCES trips (id)
       )`, (err) => {
         if (err) {
@@ -449,7 +448,7 @@ class Database {
   // Get all legs
   getAllLegs() {
     return new Promise((resolve, reject) => {
-      this.db.all('SELECT * FROM legs ORDER BY order_index', (err, rows) => {
+      this.db.all('SELECT * FROM legs ORDER BY departure_date', (err, rows) => {
         if (err) {
           reject(err);
         } else {
@@ -475,7 +474,7 @@ class Database {
   // Get legs by trip ID
   getLegsByTripId(tripId) {
     return new Promise((resolve, reject) => {
-      this.db.all('SELECT * FROM legs WHERE trip_id = ? ORDER BY order_index', [tripId], (err, rows) => {
+      this.db.all('SELECT * FROM legs WHERE trip_id = ? ORDER BY departure_date', [tripId], (err, rows) => {
         if (err) {
           reject(err);
         } else {
@@ -488,11 +487,11 @@ class Database {
   // Create new leg
   createLeg(legData) {
     return new Promise((resolve, reject) => {
-      const { name, departure_date, departure_location, arrival_date, arrival_location, trip_id, order_index } = legData;
+      const { name, departure_date, departure_location, arrival_date, arrival_location, trip_id } = legData;
       const db = this.db;
       
-      this.db.run('INSERT INTO legs (name, departure_date, departure_location, arrival_date, arrival_location, trip_id, order_index) VALUES (?, ?, ?, ?, ?, ?, ?)', 
-        [name, departure_date, departure_location, arrival_date, arrival_location, trip_id, order_index || 0], function(err) {
+      this.db.run('INSERT INTO legs (name, departure_date, departure_location, arrival_date, arrival_location, trip_id) VALUES (?, ?, ?, ?, ?, ?)', 
+        [name, departure_date, departure_location, arrival_date, arrival_location, trip_id], function(err) {
           if (err) {
             reject(err);
           } else {
@@ -512,7 +511,7 @@ class Database {
   // Update leg
   updateLeg(id, updateData) {
     return new Promise((resolve, reject) => {
-      const { name, departure_date, departure_location, arrival_date, arrival_location, order_index } = updateData;
+      const { name, departure_date, departure_location, arrival_date, arrival_location } = updateData;
       const db = this.db;
       
       // First check if leg exists
@@ -549,10 +548,6 @@ class Database {
         if (arrival_location !== undefined) {
           updateFields.push('arrival_location = ?');
           updateValues.push(arrival_location);
-        }
-        if (order_index !== undefined) {
-          updateFields.push('order_index = ?');
-          updateValues.push(order_index);
         }
         
         if (updateFields.length === 0) {
