@@ -219,90 +219,105 @@ function TripDetails({ trip, onBack, apiBase }) {
           </button>
         </div>
       ) : legs.length === 0 ? (
-        <div className="legs-container">
-          <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
-            No legs found for this trip. Add some legs to get started!
+        <div className="detail-container">
+          <div className="legs-container">
+            <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
+              No legs found for this trip. Add some legs to get started!
+            </div>
+          </div>
+          <div className="result">
+            <div className="result-content">
+              {/* Result content will be added here later */}
+            </div>
           </div>
         </div>
       ) : (
-        <div className="legs-container">
-          {legs.map((leg) => (
-            <div key={leg.id} className={`leg-item ${updating[leg.id] ? 'updating' : ''}`}>
-              <div className="leg-header">
-                <div className="leg-header-left">
-                  <EditableField
-                    value={leg.name}
-                    onSave={(value) => handleLegUpdate(leg.id, 'name', value)}
-                    className="leg-name"
-                    placeholder="Leg name"
-                  />
-                  {leg.carrier && (
+        <div className="detail-container">
+          <div className="legs-container">
+            {legs.map((leg) => (
+              <div key={leg.id} className={`leg-item ${updating[leg.id] ? 'updating' : ''}`}>
+                <div className="leg-header">
+                  <div className="leg-header-left">
                     <EditableField
-                      value={leg.carrier}
-                      onSave={(value) => handleLegUpdate(leg.id, 'carrier', value)}
-                      className="leg-carrier"
-                      placeholder="Carrier"
+                      value={leg.name}
+                      onSave={(value) => handleLegUpdate(leg.id, 'name', value)}
+                      className="leg-name"
+                      placeholder="Leg name"
                     />
-                  )}
-                </div>
-                <button
-                  className="delete-leg-btn fa-solid fa-trash"
-                  onClick={() => handleLegDelete(leg.id)}
-                  title="Delete leg"
-                >
-                </button>
-              </div>
-              
-              <div className="leg-details">
-                <div className="leg-location">
-                  <div className="location-label">Departure</div>
-                  <EditableField
-                    value={leg.departure_location}
-                    onSave={(value) => handleLegUpdate(leg.id, 'departure_location', value)}
-                    className="location-value"
-                    placeholder="Departure location"
-                  />
-                  <EditableField
-                    value={leg.departure_datetime}
-                    onSave={(value) => handleLegUpdate(leg.id, 'departure_datetime', value)}
-                    type="datetime-local"
-                    formatValue={formatDateTime}
-                    parseValue={parseDateFromPicker}
-                    className="datetime-value"
-                    placeholder="Departure date/time"
-                  />
+                    {leg.carrier && (
+                      <EditableField
+                        value={leg.carrier}
+                        onSave={(value) => handleLegUpdate(leg.id, 'carrier', value)}
+                        className="leg-carrier"
+                        placeholder="Carrier"
+                      />
+                    )}
+                  </div>
+                  <button
+                    className="delete-leg-btn fa-solid fa-trash"
+                    onClick={() => handleLegDelete(leg.id)}
+                    title="Delete leg"
+                  >
+                  </button>
                 </div>
                 
-                <div className="leg-location">
-                  <div className="location-label">Arrival</div>
-                  <EditableField
-                    value={leg.arrival_location}
-                    onSave={(value) => handleLegUpdate(leg.id, 'arrival_location', value)}
-                    className="location-value"
-                    placeholder="Arrival location"
-                  />
-                  <EditableField
-                    value={leg.arrival_datetime}
-                    onSave={(value) => handleLegUpdate(leg.id, 'arrival_datetime', value)}
-                    type="datetime-local"
-                    formatValue={formatDateTime}
-                    parseValue={parseDateFromPicker}
-                    className="datetime-value"
-                    placeholder="Arrival date/time"
-                  />
+                <div className="leg-details">
+                  <div className="leg-location">
+                    <div className="location-label">Departure</div>
+                    <EditableField
+                      value={leg.departure_location}
+                      onSave={(value) => handleLegUpdate(leg.id, 'departure_location', value)}
+                      className="location-value"
+                      placeholder="Departure location"
+                    />
+                    <EditableField
+                      value={leg.departure_datetime}
+                      onSave={(value) => handleLegUpdate(leg.id, 'departure_datetime', value)}
+                      type="datetime-local"
+                      formatValue={formatDateTime}
+                      parseValue={parseDateFromPicker}
+                      className="datetime-value"
+                      placeholder="Departure date/time"
+                    />
+                  </div>
+                  
+                  <div className="leg-location">
+                    <div className="location-label">Arrival</div>
+                    <EditableField
+                      value={leg.arrival_location}
+                      onSave={(value) => handleLegUpdate(leg.id, 'arrival_location', value)}
+                      className="location-value"
+                      placeholder="Arrival location"
+                    />
+                    <EditableField
+                      value={leg.arrival_datetime}
+                      onSave={(value) => handleLegUpdate(leg.id, 'arrival_datetime', value)}
+                      type="datetime-local"
+                      formatValue={formatDateTime}
+                      parseValue={parseDateFromPicker}
+                      className="datetime-value"
+                      placeholder="Arrival date/time"
+                    />
+                  </div>
                 </div>
               </div>
+            ))}
+            
+            <div className="add-leg-container">
+              <button
+                className="add-leg-btn"
+                onClick={handleAddLeg}
+                title="Add new leg"
+              >
+                + Add Leg
+              </button>
             </div>
-          ))}
+          </div>
           
-          <div className="add-leg-container">
-            <button
-              className="add-leg-btn"
-              onClick={handleAddLeg}
-              title="Add new leg"
-            >
-              + Add Leg
-            </button>
+          <div className="result">
+            <div className="result-content">
+              {/* Result content will be added here later */}
+            </div>
           </div>
         </div>
       )}
