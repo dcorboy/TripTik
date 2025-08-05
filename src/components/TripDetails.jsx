@@ -246,11 +246,10 @@ function TripDetails({ trip, onBack, apiBase }) {
                   )}
                 </div>
                 <button
-                  className="delete-leg-btn"
+                  className="delete-leg-btn fa-solid fa-trash"
                   onClick={() => handleLegDelete(leg.id)}
                   title="Delete leg"
                 >
-                  🗑️
                 </button>
               </div>
               
