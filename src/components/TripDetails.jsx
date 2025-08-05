@@ -84,19 +84,29 @@ function TripDetails({ trip, onBack, apiBase }) {
     return new Date(dateString).toISOString();
   };
 
+  const parseDateFromPicker = (dateString) => {
+    if (!dateString) return null;
+    // DateTimePicker already returns ISO string, so just return it
+    return dateString;
+  };
+
   const handleLegUpdate = async (legId, field, value) => {
     try {
       setUpdating(prev => ({ ...prev, [legId]: true }));
+      
+      const requestBody = { [field]: value };
       
       const response = await fetch(`${apiBase}/legs/${legId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ [field]: value })
+        body: JSON.stringify(requestBody)
       });
-
+      
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Response error:', errorText);
         throw new Error('Failed to update leg');
       }
 
@@ -258,7 +268,7 @@ function TripDetails({ trip, onBack, apiBase }) {
                     onSave={(value) => handleLegUpdate(leg.id, 'departure_datetime', value)}
                     type="datetime-local"
                     formatValue={formatDateTime}
-                    parseValue={parseDateFromInput}
+                    parseValue={parseDateFromPicker}
                     className="datetime-value"
                     placeholder="Departure date/time"
                   />
@@ -277,7 +287,7 @@ function TripDetails({ trip, onBack, apiBase }) {
                     onSave={(value) => handleLegUpdate(leg.id, 'arrival_datetime', value)}
                     type="datetime-local"
                     formatValue={formatDateTime}
-                    parseValue={parseDateFromInput}
+                    parseValue={parseDateFromPicker}
                     className="datetime-value"
                     placeholder="Arrival date/time"
                   />

@@ -10,14 +10,18 @@ function DateTimePicker({ value, onChange, onClose }) {
   useEffect(() => {
     if (value) {
       const date = new Date(value);
-      setSelectedDate(date.toISOString().split('T')[0]);
-      setSelectedTime(date.toTimeString().slice(0, 5));
+      const dateString = date.toISOString().split('T')[0];
+      const timeString = date.toTimeString().slice(0, 5);
+      setSelectedDate(dateString);
+      setSelectedTime(timeString);
       setSelectedDay(date.getDate());
       setCurrentMonth(new Date(date.getFullYear(), date.getMonth(), 1));
     } else {
       const now = new Date();
-      setSelectedDate(now.toISOString().split('T')[0]);
-      setSelectedTime(now.toTimeString().slice(0, 5));
+      const dateString = now.toISOString().split('T')[0];
+      const timeString = now.toTimeString().slice(0, 5);
+      setSelectedDate(dateString);
+      setSelectedTime(timeString);
       setSelectedDay(now.getDate());
       setCurrentMonth(new Date(now.getFullYear(), now.getMonth(), 1));
     }
@@ -68,16 +72,19 @@ function DateTimePicker({ value, onChange, onClose }) {
     if (day) {
       setSelectedDay(day);
       const newDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
-      setSelectedDate(newDate.toISOString().split('T')[0]);
+      const dateString = newDate.toISOString().split('T')[0];
+      setSelectedDate(dateString);
     }
   };
 
   const handleSave = () => {
     if (selectedDate && selectedTime) {
       const [hours, minutes] = selectedTime.split(':');
-      const dateTime = new Date(selectedDate);
-      dateTime.setHours(parseInt(hours), parseInt(minutes));
-      onChange(dateTime.toISOString());
+      // Create date in local timezone to avoid timezone offset issues
+      const [year, month, day] = selectedDate.split('-').map(Number);
+      const dateTime = new Date(year, month - 1, day, parseInt(hours), parseInt(minutes));
+      const isoString = dateTime.toISOString();
+      onChange(isoString);
     }
     onClose();
   };
@@ -87,11 +94,17 @@ function DateTimePicker({ value, onChange, onClose }) {
   };
 
   const prevMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+    const newMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
+    setCurrentMonth(newMonth);
+    // Clear selected day when changing months
+    setSelectedDay(null);
   };
 
   const nextMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+    const newMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
+    setCurrentMonth(newMonth);
+    // Clear selected day when changing months
+    setSelectedDay(null);
   };
 
   const days = getDaysInMonth(currentMonth);

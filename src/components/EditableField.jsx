@@ -92,7 +92,8 @@ function EditableField({
         <DateTimePicker
           value={value}
           onChange={(newValue) => {
-            onSave(parseValue(newValue));
+            const parsedValue = parseValue(newValue);
+            onSave(parsedValue);
             setShowDatePicker(false);
           }}
           onClose={() => setShowDatePicker(false)}
