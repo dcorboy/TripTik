@@ -153,4 +153,62 @@ body {
 
 .back-button:hover {
     background: #5a6268;
+}
+
+/* Editable Field Styles */
+.editable-field {
+    cursor: pointer;
+    border-radius: 3px;
+    padding: 2px 4px;
+    transition: background-color 0.2s;
+}
+
+.editable-field:hover {
+    background-color: #f0f0f0;
+}
+
+.editable-input {
+    border: 1px solid #007bff;
+    border-radius: 3px;
+    padding: 2px 4px;
+    font-size: inherit;
+    font-family: inherit;
+    background-color: white;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.editable-input:focus {
+    outline: none;
+    border-color: #0056b3;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.location-value {
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 2px;
+}
+
+.datetime-value {
+    font-size: 12px;
+    color: #999;
+}
+
+/* Loading indicator for updates */
+.leg-item.updating {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.leg-item.updating::after {
+    content: "Saving...";
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #007bff;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
 } 

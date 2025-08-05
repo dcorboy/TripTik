@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'preact/hooks';
+import EditableField from './EditableField.jsx';
 
 function TripDetails({ trip, onBack, apiBase }) {
   const [legs, setLegs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [updating, setUpdating] = useState({});
 
   useEffect(() => {
     fetchLegs();
@@ -65,6 +67,55 @@ function TripDetails({ trip, onBack, apiBase }) {
     });
   };
 
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    // Convert to local timezone for datetime-local input
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  const parseDateFromInput = (dateString) => {
+    if (!dateString) return null;
+    return new Date(dateString).toISOString();
+  };
+
+  const handleLegUpdate = async (legId, field, value) => {
+    try {
+      setUpdating(prev => ({ ...prev, [legId]: true }));
+      
+      const response = await fetch(`${apiBase}/legs/${legId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ [field]: value })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update leg');
+      }
+
+      const updatedLeg = await response.json();
+      
+      // Update the legs list with the new data
+      setLegs(prevLegs => 
+        prevLegs.map(leg => 
+          leg.id === legId ? { ...leg, ...updatedLeg } : leg
+        )
+      );
+    } catch (err) {
+      console.error('Error updating leg:', err);
+      // You could show a toast notification here
+    } finally {
+      setUpdating(prev => ({ ...prev, [legId]: false }));
+    }
+  };
+
   return (
     <div>
       <button className="back-button" onClick={onBack}>
@@ -94,29 +145,61 @@ function TripDetails({ trip, onBack, apiBase }) {
       ) : (
         <div className="legs-container">
           {legs.map((leg) => (
-            <div key={leg.id} className="leg-item">
+            <div key={leg.id} className={`leg-item ${updating[leg.id] ? 'updating' : ''}`}>
               <div className="leg-header">
-                <div className="leg-name">{leg.name}</div>
+                <EditableField
+                  value={leg.name}
+                  onSave={(value) => handleLegUpdate(leg.id, 'name', value)}
+                  className="leg-name"
+                  placeholder="Leg name"
+                />
                 {leg.carrier && (
-                  <div className="leg-carrier">{leg.carrier}</div>
+                  <EditableField
+                    value={leg.carrier}
+                    onSave={(value) => handleLegUpdate(leg.id, 'carrier', value)}
+                    className="leg-carrier"
+                    placeholder="Carrier"
+                  />
                 )}
               </div>
               
               <div className="leg-details">
                 <div className="leg-location">
                   <div className="location-label">Departure</div>
-                  <div>{leg.departure_location || 'Not specified'}</div>
-                  <div style={{ fontSize: '12px', color: '#999' }}>
-                    {formatDateTime(leg.departure_datetime)}
-                  </div>
+                  <EditableField
+                    value={leg.departure_location}
+                    onSave={(value) => handleLegUpdate(leg.id, 'departure_location', value)}
+                    className="location-value"
+                    placeholder="Departure location"
+                  />
+                  <EditableField
+                    value={leg.departure_datetime}
+                    onSave={(value) => handleLegUpdate(leg.id, 'departure_datetime', value)}
+                    type="datetime-local"
+                    formatValue={formatDateTime}
+                    parseValue={parseDateFromInput}
+                    className="datetime-value"
+                    placeholder="Departure date/time"
+                  />
                 </div>
                 
                 <div className="leg-location">
                   <div className="location-label">Arrival</div>
-                  <div>{leg.arrival_location || 'Not specified'}</div>
-                  <div style={{ fontSize: '12px', color: '#999' }}>
-                    {formatDateTime(leg.arrival_datetime)}
-                  </div>
+                  <EditableField
+                    value={leg.arrival_location}
+                    onSave={(value) => handleLegUpdate(leg.id, 'arrival_location', value)}
+                    className="location-value"
+                    placeholder="Arrival location"
+                  />
+                  <EditableField
+                    value={leg.arrival_datetime}
+                    onSave={(value) => handleLegUpdate(leg.id, 'arrival_datetime', value)}
+                    type="datetime-local"
+                    formatValue={formatDateTime}
+                    parseValue={parseDateFromInput}
+                    className="datetime-value"
+                    placeholder="Arrival date/time"
+                  />
                 </div>
               </div>
             </div>
