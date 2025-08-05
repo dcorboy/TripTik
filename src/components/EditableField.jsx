@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
+import DateTimePicker from './DateTimePicker.jsx';
 
 function EditableField({ 
   value, 
@@ -11,6 +12,7 @@ function EditableField({
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -24,8 +26,19 @@ function EditableField({
     }
   }, [isEditing]);
 
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
   const handleClick = () => {
-    setIsEditing(true);
+    if (type === 'datetime-local') {
+      setShowDatePicker(true);
+    } else {
+      setIsEditing(true);
+    }
   };
 
   const handleBlur = () => {
@@ -66,13 +79,26 @@ function EditableField({
   }
 
   return (
-    <span 
-      onClick={handleClick}
-      className={`editable-field ${className}`}
-      title="Click to edit"
-    >
-      {formatValue(value) || placeholder}
-    </span>
+    <>
+      <span 
+        onClick={handleClick}
+        className={`editable-field ${className}`}
+        title="Click to edit"
+      >
+        {formatValue(value) || placeholder}
+      </span>
+      
+      {showDatePicker && (
+        <DateTimePicker
+          value={value}
+          onChange={(newValue) => {
+            onSave(parseValue(newValue));
+            setShowDatePicker(false);
+          }}
+          onClose={() => setShowDatePicker(false)}
+        />
+      )}
+    </>
   );
 }
 
