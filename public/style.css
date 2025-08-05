@@ -86,12 +86,7 @@ body {
     border-bottom: none;
 }
 
-.leg-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
+
 
 .leg-name {
     font-weight: 600;
@@ -174,7 +169,7 @@ body {
     font-size: inherit;
     font-family: inherit;
     background-color: white;
-    width: 100%;
+    /* width: 100%; */
     box-sizing: border-box;
 }
 
@@ -211,4 +206,62 @@ body {
     padding: 4px 8px;
     border-radius: 4px;
     font-size: 12px;
+}
+
+/* Leg header layout */
+.leg-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.leg-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+/* Delete button */
+.delete-leg-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    color: #dc3545;
+}
+
+.delete-leg-btn:hover {
+    background-color: #f8d7da;
+}
+
+/* Add leg button */
+.add-leg-container {
+    padding: 20px;
+    text-align: center;
+    border-top: 1px solid #eee;
+}
+
+.add-leg-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.add-leg-btn:hover {
+    background: #218838;
+}
+
+.add-leg-btn:active {
+    background: #1e7e34;
 } 

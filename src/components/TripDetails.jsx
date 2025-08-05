@@ -102,17 +102,89 @@ function TripDetails({ trip, onBack, apiBase }) {
 
       const updatedLeg = await response.json();
       
-      // Update the legs list with the new data
-      setLegs(prevLegs => 
-        prevLegs.map(leg => 
+      // Update the legs list with the new data and re-sort
+      setLegs(prevLegs => {
+        const updatedLegs = prevLegs.map(leg => 
           leg.id === legId ? { ...leg, ...updatedLeg } : leg
-        )
-      );
+        );
+        return updatedLegs.sort((a, b) => {
+          const dateA = new Date(a.departure_datetime);
+          const dateB = new Date(b.departure_datetime);
+          return dateA - dateB;
+        });
+      });
     } catch (err) {
       console.error('Error updating leg:', err);
       // You could show a toast notification here
     } finally {
       setUpdating(prev => ({ ...prev, [legId]: false }));
+    }
+  };
+
+  const handleLegDelete = async (legId) => {
+    if (!confirm('Are you sure you want to delete this leg?')) {
+      return;
+    }
+
+    try {
+      setUpdating(prev => ({ ...prev, [legId]: true }));
+      
+      const response = await fetch(`${apiBase}/legs/${legId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete leg');
+      }
+
+      // Remove the leg from the list
+      setLegs(prevLegs => prevLegs.filter(leg => leg.id !== legId));
+    } catch (err) {
+      console.error('Error deleting leg:', err);
+      // You could show a toast notification here
+    } finally {
+      setUpdating(prev => ({ ...prev, [legId]: false }));
+    }
+  };
+
+  const handleAddLeg = async () => {
+    try {
+      const newLeg = {
+        name: 'New Leg',
+        departure_datetime: new Date().toISOString(),
+        departure_location: '',
+        arrival_datetime: new Date().toISOString(),
+        arrival_location: '',
+        carrier: '',
+        trip_id: trip.id
+      };
+
+      const response = await fetch(`${apiBase}/legs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newLeg)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create leg');
+      }
+
+      const createdLeg = await response.json();
+      
+      // Add the new leg and re-sort
+      setLegs(prevLegs => {
+        const updatedLegs = [...prevLegs, createdLeg];
+        return updatedLegs.sort((a, b) => {
+          const dateA = new Date(a.departure_datetime);
+          const dateB = new Date(b.departure_datetime);
+          return dateA - dateB;
+        });
+      });
+    } catch (err) {
+      console.error('Error creating leg:', err);
+      // You could show a toast notification here
     }
   };
 
@@ -147,20 +219,29 @@ function TripDetails({ trip, onBack, apiBase }) {
           {legs.map((leg) => (
             <div key={leg.id} className={`leg-item ${updating[leg.id] ? 'updating' : ''}`}>
               <div className="leg-header">
-                <EditableField
-                  value={leg.name}
-                  onSave={(value) => handleLegUpdate(leg.id, 'name', value)}
-                  className="leg-name"
-                  placeholder="Leg name"
-                />
-                {leg.carrier && (
+                <div className="leg-header-left">
                   <EditableField
-                    value={leg.carrier}
-                    onSave={(value) => handleLegUpdate(leg.id, 'carrier', value)}
-                    className="leg-carrier"
-                    placeholder="Carrier"
+                    value={leg.name}
+                    onSave={(value) => handleLegUpdate(leg.id, 'name', value)}
+                    className="leg-name"
+                    placeholder="Leg name"
                   />
-                )}
+                  {leg.carrier && (
+                    <EditableField
+                      value={leg.carrier}
+                      onSave={(value) => handleLegUpdate(leg.id, 'carrier', value)}
+                      className="leg-carrier"
+                      placeholder="Carrier"
+                    />
+                  )}
+                </div>
+                <button
+                  className="delete-leg-btn"
+                  onClick={() => handleLegDelete(leg.id)}
+                  title="Delete leg"
+                >
+                  🗑️
+                </button>
               </div>
               
               <div className="leg-details">
@@ -204,6 +285,16 @@ function TripDetails({ trip, onBack, apiBase }) {
               </div>
             </div>
           ))}
+          
+          <div className="add-leg-container">
+            <button
+              className="add-leg-btn"
+              onClick={handleAddLeg}
+              title="Add new leg"
+            >
+              + Add Leg
+            </button>
+          </div>
         </div>
       )}
     </div>
