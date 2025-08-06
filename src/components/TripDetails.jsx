@@ -11,6 +11,7 @@ function TripDetails({ trip, onBack, apiBase }) {
   const [updating, setUpdating] = useState({});
   const [analysisResult, setAnalysisResult] = useState('');
   const [currentTimezone, setCurrentTimezone] = useState(getUserTimezone());
+  const [currentTrip, setCurrentTrip] = useState(trip);
 
   useEffect(() => {
     fetchLegs();
@@ -77,8 +78,29 @@ function TripDetails({ trip, onBack, apiBase }) {
   };
 
   const updateAnalysis = (currentLegs) => {
-    const result = analyzeTrip(trip, currentLegs);
+    const result = analyzeTrip(currentTrip, currentLegs);
     setAnalysisResult(result);
+  };
+
+  const handleTripUpdate = async (field, value) => {
+    try {
+      const response = await fetch(`${apiBase}/trips/${trip.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ [field]: value })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update trip');
+      }
+
+      const updatedTrip = await response.json();
+      setCurrentTrip(updatedTrip);
+    } catch (err) {
+      console.error('Error updating trip:', err);
+    }
   };
 
   const handleTimezoneChange = (newTimezone) => {
@@ -220,8 +242,18 @@ function TripDetails({ trip, onBack, apiBase }) {
       </button>
       
       <div className="header">
-        <h1>{trip.name}</h1>
-        {trip.description && <p>{trip.description}</p>}
+        <EditableField
+          value={currentTrip.name}
+          onSave={(value) => handleTripUpdate('name', value)}
+          className="trip-title"
+          placeholder="Trip name"
+        />
+        <EditableField
+          value={currentTrip.description || ''}
+          onSave={(value) => handleTripUpdate('description', value)}
+          className="trip-description"
+          placeholder="Add trip description"
+        />
         <div className="timezone-info">
           Times displayed in: <TimezonePicker 
             value={currentTimezone}
