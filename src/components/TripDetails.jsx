@@ -332,10 +332,10 @@ function TripDetails({ trip, onBack, apiBase }) {
                         value={leg.departure_datetime}
                         onSave={(value) => handleLegUpdate(leg.id, 'departure_datetime', value)}
                         type="datetime-local"
-                        formatValue={(value) => formatTime(value, leg.departure_timezone || 'America/New_York')}
+                        formatValue={(value) => formatDateTime(value, leg.departure_timezone || 'America/New_York')}
                         parseValue={parseDateFromPicker}
                         className="time-value"
-                        placeholder="Departure time"
+                        placeholder="Departure date/time"
                       />
                       <TimezonePicker
                         value={leg.departure_timezone || 'America/New_York'}
@@ -357,10 +357,10 @@ function TripDetails({ trip, onBack, apiBase }) {
                         value={leg.arrival_datetime}
                         onSave={(value) => handleLegUpdate(leg.id, 'arrival_datetime', value)}
                         type="datetime-local"
-                        formatValue={(value) => formatTime(value, leg.arrival_timezone || 'America/New_York')}
+                        formatValue={(value) => formatDateTime(value, leg.arrival_timezone || 'America/New_York')}
                         parseValue={parseDateFromPicker}
                         className="time-value"
-                        placeholder="Arrival time"
+                        placeholder="Arrival date/time"
                       />
                       <TimezonePicker
                         value={leg.arrival_timezone || 'America/New_York'}
