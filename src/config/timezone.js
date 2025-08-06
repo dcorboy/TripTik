@@ -21,12 +21,13 @@ export function getUserTimezone() {
 }
 
 /**
- * Format a date/time string to the user's timezone
+ * Format a date/time string to a specific timezone
  * @param {string} dateTimeString - ISO datetime string
+ * @param {string} timezone - IANA timezone identifier
  * @param {Object} options - Intl.DateTimeFormat options
  * @returns {string} - Formatted date/time string
  */
-export function formatInUserTimezone(dateTimeString, options = {}) {
+export function formatInTimezone(dateTimeString, timezone, options = {}) {
   if (!dateTimeString) return 'Not specified';
   
   const date = new Date(dateTimeString);
@@ -38,10 +39,56 @@ export function formatInUserTimezone(dateTimeString, options = {}) {
     hour: '2-digit',
     minute: '2-digit',
     timeZoneName: 'short',
-    timeZone: USER_TIMEZONE
+    timeZone: timezone
   };
   
   return date.toLocaleString('en-US', { ...defaultOptions, ...options });
+}
+
+/**
+ * Format just the time portion in a specific timezone
+ * @param {string} dateTimeString - ISO datetime string
+ * @param {string} timezone - IANA timezone identifier
+ * @returns {string} - Formatted time string
+ */
+export function formatTimeInTimezone(dateTimeString, timezone) {
+  if (!dateTimeString) return '';
+  
+  const date = new Date(dateTimeString);
+  return date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short',
+    timeZone: timezone
+  });
+}
+
+/**
+ * Format just the date portion in a specific timezone
+ * @param {string} dateTimeString - ISO datetime string
+ * @param {string} timezone - IANA timezone identifier
+ * @returns {string} - Formatted date string
+ */
+export function formatDateInTimezone(dateTimeString, timezone) {
+  if (!dateTimeString) return 'Not specified';
+  
+  const date = new Date(dateTimeString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    timeZone: timezone
+  });
+}
+
+/**
+ * Format a date/time string to the user's timezone
+ * @param {string} dateTimeString - ISO datetime string
+ * @param {Object} options - Intl.DateTimeFormat options
+ * @returns {string} - Formatted date/time string
+ */
+export function formatInUserTimezone(dateTimeString, options = {}) {
+  return formatInTimezone(dateTimeString, USER_TIMEZONE, options);
 }
 
 /**
@@ -50,15 +97,7 @@ export function formatInUserTimezone(dateTimeString, options = {}) {
  * @returns {string} - Formatted time string
  */
 export function formatTimeInUserTimezone(dateTimeString) {
-  if (!dateTimeString) return '';
-  
-  const date = new Date(dateTimeString);
-  return date.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZoneName: 'short',
-    timeZone: USER_TIMEZONE
-  });
+  return formatTimeInTimezone(dateTimeString, USER_TIMEZONE);
 }
 
 /**
@@ -67,13 +106,5 @@ export function formatTimeInUserTimezone(dateTimeString) {
  * @returns {string} - Formatted date string
  */
 export function formatDateInUserTimezone(dateTimeString) {
-  if (!dateTimeString) return 'Not specified';
-  
-  const date = new Date(dateTimeString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    timeZone: USER_TIMEZONE
-  });
+  return formatDateInTimezone(dateTimeString, USER_TIMEZONE);
 } 

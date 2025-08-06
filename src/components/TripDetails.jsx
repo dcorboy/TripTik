@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import EditableField from './EditableField.jsx';
 import { analyzeTrip } from '../utils/tripAnalyzer.js';
-import { formatInUserTimezone, formatTimeInUserTimezone, formatDateInUserTimezone, setUserTimezone, getUserTimezone } from '../config/timezone.js';
+import { formatInTimezone, formatTimeInTimezone, formatDateInTimezone, setUserTimezone, getUserTimezone } from '../config/timezone.js';
 import TimezonePicker from './TimezonePicker.jsx';
 
 function TripDetails({ trip, onBack, apiBase }) {
@@ -49,9 +49,9 @@ function TripDetails({ trip, onBack, apiBase }) {
     }
   };
 
-  const formatDate = formatDateInUserTimezone;
-  const formatTime = formatTimeInUserTimezone;
-  const formatDateTime = formatInUserTimezone;
+  const formatDate = (dateString, timezone) => formatDateInTimezone(dateString, timezone);
+  const formatTime = (dateString, timezone) => formatTimeInTimezone(dateString, timezone);
+  const formatDateTime = (dateString, timezone) => formatInTimezone(dateString, timezone);
 
   const formatDateForInput = (dateString) => {
     if (!dateString) return '';
@@ -92,14 +92,21 @@ function TripDetails({ trip, onBack, apiBase }) {
     try {
       setUpdating(prev => ({ ...prev, [legId]: true }));
       
-      const requestBody = { [field]: value };
+      // Special handling for timezone changes
+      let updateData = { [field]: value };
+      
+      if (field === 'departure_timezone' || field === 'arrival_timezone') {
+        // For timezone changes, we don't need to modify the datetime
+        // The display will automatically show the time in the new timezone
+        // Just update the timezone field
+      }
       
       const response = await fetch(`${apiBase}/legs/${legId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(updateData)
       });
       
       if (!response.ok) {
@@ -167,8 +174,10 @@ function TripDetails({ trip, onBack, apiBase }) {
         name: 'New Leg',
         departure_datetime: new Date().toISOString(),
         departure_location: '',
+        departure_timezone: 'America/New_York',
         arrival_datetime: new Date().toISOString(),
         arrival_location: '',
+        arrival_timezone: 'America/New_York',
         carrier: '',
         trip_id: trip.id
       };
@@ -282,15 +291,21 @@ function TripDetails({ trip, onBack, apiBase }) {
                       className="location-value"
                       placeholder="Departure location"
                     />
-                    <EditableField
-                      value={leg.departure_datetime}
-                      onSave={(value) => handleLegUpdate(leg.id, 'departure_datetime', value)}
-                      type="datetime-local"
-                      formatValue={formatDateTime}
-                      parseValue={parseDateFromPicker}
-                      className="datetime-value"
-                      placeholder="Departure date/time"
-                    />
+                    <div className="datetime-container">
+                      <EditableField
+                        value={leg.departure_datetime}
+                        onSave={(value) => handleLegUpdate(leg.id, 'departure_datetime', value)}
+                        type="datetime-local"
+                        formatValue={(value) => formatTime(value, leg.departure_timezone || 'America/New_York')}
+                        parseValue={parseDateFromPicker}
+                        className="time-value"
+                        placeholder="Departure time"
+                      />
+                      <TimezonePicker
+                        value={leg.departure_timezone || 'America/New_York'}
+                        onChange={(timezone) => handleLegUpdate(leg.id, 'departure_timezone', timezone)}
+                      />
+                    </div>
                   </div>
                   
                   <div className="leg-location">
@@ -301,15 +316,21 @@ function TripDetails({ trip, onBack, apiBase }) {
                       className="location-value"
                       placeholder="Arrival location"
                     />
-                    <EditableField
-                      value={leg.arrival_datetime}
-                      onSave={(value) => handleLegUpdate(leg.id, 'arrival_datetime', value)}
-                      type="datetime-local"
-                      formatValue={formatDateTime}
-                      parseValue={parseDateFromPicker}
-                      className="datetime-value"
-                      placeholder="Arrival date/time"
-                    />
+                    <div className="datetime-container">
+                      <EditableField
+                        value={leg.arrival_datetime}
+                        onSave={(value) => handleLegUpdate(leg.id, 'arrival_datetime', value)}
+                        type="datetime-local"
+                        formatValue={(value) => formatTime(value, leg.arrival_timezone || 'America/New_York')}
+                        parseValue={parseDateFromPicker}
+                        className="time-value"
+                        placeholder="Arrival time"
+                      />
+                      <TimezonePicker
+                        value={leg.arrival_timezone || 'America/New_York'}
+                        onChange={(timezone) => handleLegUpdate(leg.id, 'arrival_timezone', timezone)}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

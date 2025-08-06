@@ -1,4 +1,4 @@
-import { formatInUserTimezone } from '../config/timezone.js';
+import { formatInTimezone } from '../config/timezone.js';
 
 /**
  * Analyzes trip data and returns formatted text output
@@ -14,8 +14,8 @@ export function analyzeTrip(trip, legs) {
   } else {
     output.push("Legs in this trip:");
     legs.forEach((leg, index) => {
-      const departureTime = formatInUserTimezone(leg.departure_datetime);
-      const arrivalTime = formatInUserTimezone(leg.arrival_datetime);
+      const departureTime = formatInTimezone(leg.departure_datetime, leg.departure_timezone || 'America/New_York');
+      const arrivalTime = formatInTimezone(leg.arrival_datetime, leg.arrival_timezone || 'America/New_York');
       output.push(`${index + 1}. ${leg.name}`);
       output.push(`   Departure: ${departureTime}`);
       output.push(`   Arrival: ${arrivalTime}`);
