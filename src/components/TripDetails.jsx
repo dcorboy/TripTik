@@ -1,15 +1,24 @@
 import { useState, useEffect } from 'preact/hooks';
 import EditableField from './EditableField.jsx';
+import { analyzeTrip } from '../utils/tripAnalyzer.js';
 
 function TripDetails({ trip, onBack, apiBase }) {
   const [legs, setLegs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [updating, setUpdating] = useState({});
+  const [analysisResult, setAnalysisResult] = useState('');
 
   useEffect(() => {
     fetchLegs();
   }, [trip.id]);
+
+  // Update analysis when legs change
+  useEffect(() => {
+    if (!loading && !error) {
+      updateAnalysis(legs);
+    }
+  }, [legs, loading, error]);
 
   const fetchLegs = async () => {
     try {
@@ -29,6 +38,7 @@ function TripDetails({ trip, onBack, apiBase }) {
       });
       
       setLegs(sortedLegs);
+      updateAnalysis(sortedLegs);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -90,6 +100,11 @@ function TripDetails({ trip, onBack, apiBase }) {
     return dateString;
   };
 
+  const updateAnalysis = (currentLegs) => {
+    const result = analyzeTrip(trip, currentLegs);
+    setAnalysisResult(result);
+  };
+
   const handleLegUpdate = async (legId, field, value) => {
     try {
       setUpdating(prev => ({ ...prev, [legId]: true }));
@@ -117,11 +132,13 @@ function TripDetails({ trip, onBack, apiBase }) {
         const updatedLegs = prevLegs.map(leg => 
           leg.id === legId ? { ...leg, ...updatedLeg } : leg
         );
-        return updatedLegs.sort((a, b) => {
+        const sortedLegs = updatedLegs.sort((a, b) => {
           const dateA = new Date(a.departure_datetime);
           const dateB = new Date(b.departure_datetime);
           return dateA - dateB;
         });
+        updateAnalysis(sortedLegs);
+        return sortedLegs;
       });
     } catch (err) {
       console.error('Error updating leg:', err);
@@ -148,7 +165,11 @@ function TripDetails({ trip, onBack, apiBase }) {
       }
 
       // Remove the leg from the list
-      setLegs(prevLegs => prevLegs.filter(leg => leg.id !== legId));
+      setLegs(prevLegs => {
+        const filteredLegs = prevLegs.filter(leg => leg.id !== legId);
+        updateAnalysis(filteredLegs);
+        return filteredLegs;
+      });
     } catch (err) {
       console.error('Error deleting leg:', err);
       // You could show a toast notification here
@@ -186,11 +207,13 @@ function TripDetails({ trip, onBack, apiBase }) {
       // Add the new leg and re-sort
       setLegs(prevLegs => {
         const updatedLegs = [...prevLegs, createdLeg];
-        return updatedLegs.sort((a, b) => {
+        const sortedLegs = updatedLegs.sort((a, b) => {
           const dateA = new Date(a.departure_datetime);
           const dateB = new Date(b.departure_datetime);
           return dateA - dateB;
         });
+        updateAnalysis(sortedLegs);
+        return sortedLegs;
       });
     } catch (err) {
       console.error('Error creating leg:', err);
@@ -227,7 +250,7 @@ function TripDetails({ trip, onBack, apiBase }) {
           </div>
           <div className="result">
             <div className="result-content">
-              {/* Result content will be added here later */}
+              <pre>{analysisResult || 'No TripTik available'}</pre>
             </div>
           </div>
         </div>
@@ -316,7 +339,7 @@ function TripDetails({ trip, onBack, apiBase }) {
           
           <div className="result">
             <div className="result-content">
-              {/* Result content will be added here later */}
+              <pre>{analysisResult || 'No TripTik available'}</pre>
             </div>
           </div>
         </div>

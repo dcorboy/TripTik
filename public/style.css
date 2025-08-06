@@ -87,7 +87,6 @@ body {
     background: white;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-top: 20px;
 }
 
 .leg-item {
@@ -244,6 +243,15 @@ body {
     min-height: 200px;
     color: #666;
     font-style: italic;
+}
+
+.result-content pre {
+    margin: 0;
+    white-space: pre-wrap;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #333;
 }
 
 /* Leg header layout */
