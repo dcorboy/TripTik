@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import EditableField from './EditableField.jsx';
 import { analyzeTrip } from '../utils/tripAnalyzer.js';
+import { formatInUserTimezone, formatTimeInUserTimezone, formatDateInUserTimezone } from '../config/timezone.js';
 
 function TripDetails({ trip, onBack, apiBase }) {
   const [legs, setLegs] = useState([]);
@@ -46,36 +47,9 @@ function TripDetails({ trip, onBack, apiBase }) {
     }
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Not specified';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const formatTime = (dateString) => {
-    if (!dateString) return '';
-    return new Date(dateString).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZoneName: 'short'
-    });
-  };
-
-  const formatDateTime = (dateString) => {
-    if (!dateString) return 'Not specified';
-    const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZoneName: 'short'
-    });
-  };
+  const formatDate = formatDateInUserTimezone;
+  const formatTime = formatTimeInUserTimezone;
+  const formatDateTime = formatInUserTimezone;
 
   const formatDateForInput = (dateString) => {
     if (!dateString) return '';
@@ -230,6 +204,9 @@ function TripDetails({ trip, onBack, apiBase }) {
       <div className="header">
         <h1>{trip.name}</h1>
         {trip.description && <p>{trip.description}</p>}
+        <div className="timezone-info">
+          Times displayed in: Eastern Time (ET)
+        </div>
       </div>
 
       {loading ? (

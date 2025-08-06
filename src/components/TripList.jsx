@@ -1,12 +1,7 @@
+import { formatDateInUserTimezone } from '../config/timezone.js';
+
 function TripList({ trips, onTripSelect }) {
-  const formatDate = (dateString) => {
-    if (!dateString) return null;
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
+  const formatDate = formatDateInUserTimezone;
 
   const formatDateRange = (startDate, endDate) => {
     const start = formatDate(startDate);
