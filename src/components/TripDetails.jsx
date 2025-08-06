@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'preact/hooks';
 import EditableField from './EditableField.jsx';
 import { analyzeTrip } from '../utils/tripAnalyzer.js';
-import { formatInUserTimezone, formatTimeInUserTimezone, formatDateInUserTimezone } from '../config/timezone.js';
+import { formatInUserTimezone, formatTimeInUserTimezone, formatDateInUserTimezone, setUserTimezone, getUserTimezone } from '../config/timezone.js';
+import TimezonePicker from './TimezonePicker.jsx';
 
 function TripDetails({ trip, onBack, apiBase }) {
   const [legs, setLegs] = useState([]);
@@ -9,6 +10,7 @@ function TripDetails({ trip, onBack, apiBase }) {
   const [error, setError] = useState(null);
   const [updating, setUpdating] = useState({});
   const [analysisResult, setAnalysisResult] = useState('');
+  const [currentTimezone, setCurrentTimezone] = useState(getUserTimezone());
 
   useEffect(() => {
     fetchLegs();
@@ -77,6 +79,13 @@ function TripDetails({ trip, onBack, apiBase }) {
   const updateAnalysis = (currentLegs) => {
     const result = analyzeTrip(trip, currentLegs);
     setAnalysisResult(result);
+  };
+
+  const handleTimezoneChange = (newTimezone) => {
+    setUserTimezone(newTimezone);
+    setCurrentTimezone(newTimezone);
+    // Force re-analysis to update times
+    updateAnalysis(legs);
   };
 
   const handleLegUpdate = async (legId, field, value) => {
@@ -205,7 +214,10 @@ function TripDetails({ trip, onBack, apiBase }) {
         <h1>{trip.name}</h1>
         {trip.description && <p>{trip.description}</p>}
         <div className="timezone-info">
-          Times displayed in: Eastern Time (ET)
+          Times displayed in: <TimezonePicker 
+            value={currentTimezone}
+            onChange={handleTimezoneChange}
+          />
         </div>
       </div>
 

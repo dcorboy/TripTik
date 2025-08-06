@@ -1,8 +1,24 @@
 /**
  * Timezone configuration for the application
- * Set this to change the display timezone for all times in the app
+ * The timezone can be changed dynamically by calling setUserTimezone()
  */
-export const USER_TIMEZONE = 'America/New_York'; // User's timezone
+let USER_TIMEZONE = 'America/New_York'; // User's timezone
+
+/**
+ * Set the user's timezone
+ * @param {string} timezone - IANA timezone identifier
+ */
+export function setUserTimezone(timezone) {
+  USER_TIMEZONE = timezone;
+}
+
+/**
+ * Get the current user timezone
+ * @returns {string} - Current timezone identifier
+ */
+export function getUserTimezone() {
+  return USER_TIMEZONE;
+}
 
 /**
  * Format a date/time string to the user's timezone

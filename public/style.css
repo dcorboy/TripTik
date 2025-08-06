@@ -49,6 +49,72 @@ body {
     font-style: italic;
 }
 
+/* Timezone Picker Styles */
+.timezone-picker-container {
+    position: relative;
+    display: inline-block;
+}
+
+.timezone-display {
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    font-size: 12px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: background-color 0.2s;
+}
+
+.timezone-display:hover {
+    background: #e9ecef;
+}
+
+.timezone-arrow {
+    font-size: 8px;
+    color: #999;
+    transition: transform 0.2s;
+}
+
+.timezone-picker-container.open .timezone-arrow {
+    transform: rotate(180deg);
+}
+
+.timezone-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 1000;
+    max-height: 200px;
+    overflow-y: auto;
+    min-width: 200px;
+}
+
+.timezone-option {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #333;
+    transition: background-color 0.2s;
+}
+
+.timezone-option:hover {
+    background: #f8f9fa;
+}
+
+.timezone-option.selected {
+    background: #e3f2fd;
+    color: #1976d2;
+    font-weight: 500;
+}
+
 .trip-list {
     background: white;
     border-radius: 8px;
