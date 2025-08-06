@@ -30,13 +30,13 @@ router.get('/:id', async (req, res) => {
 // POST /legs - Create a new leg
 router.post('/', async (req, res) => {
   try {
-    const { name, departure_datetime, departure_location, arrival_datetime, arrival_location, carrier, trip_id } = req.body;
+    const { name, departure_datetime, departure_location, departure_timezone, arrival_datetime, arrival_location, arrival_timezone, carrier, trip_id } = req.body;
     
     if (!name || !trip_id) {
       return res.status(400).json({ error: 'Name and trip_id are required' });
     }
     
-    const newLeg = await req.db.createLeg({ name, departure_datetime, departure_location, arrival_datetime, arrival_location, carrier, trip_id });
+    const newLeg = await req.db.createLeg({ name, departure_datetime, departure_location, departure_timezone, arrival_datetime, arrival_location, arrival_timezone, carrier, trip_id });
     res.status(201).json(newLeg);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -47,9 +47,9 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const legId = req.params.id;
-    const { name, departure_datetime, departure_location, arrival_datetime, arrival_location, carrier } = req.body;
+    const { name, departure_datetime, departure_location, departure_timezone, arrival_datetime, arrival_location, arrival_timezone, carrier } = req.body;
     
-    const updatedLeg = await req.db.updateLeg(legId, { name, departure_datetime, departure_location, arrival_datetime, arrival_location, carrier });
+    const updatedLeg = await req.db.updateLeg(legId, { name, departure_datetime, departure_location, departure_timezone, arrival_datetime, arrival_location, arrival_timezone, carrier });
     res.json(updatedLeg);
   } catch (err) {
     if (err.message === 'Leg not found') {

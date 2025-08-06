@@ -151,8 +151,10 @@ class Database {
         name TEXT,
         departure_datetime TEXT,  -- ISO 8601 format with timezone
         departure_location TEXT,
+        departure_timezone TEXT,  -- IANA timezone identifier
         arrival_datetime TEXT,    -- ISO 8601 format with timezone
         arrival_location TEXT,
+        arrival_timezone TEXT,    -- IANA timezone identifier
         carrier TEXT,
         trip_id INTEGER,
         FOREIGN KEY (trip_id) REFERENCES trips (id)
@@ -266,8 +268,10 @@ class Database {
           name: 'Flight to Orlando',
           departure_datetime: '2024-06-15T06:30:00.000Z', // 6:30 AM EDT
           departure_location: 'IAD',
+          departure_timezone: 'America/New_York',
           arrival_datetime: '2024-06-15T09:45:00.000Z',   // 9:45 AM EDT
           arrival_location: 'MCO',
+          arrival_timezone: 'America/New_York',
           carrier: 'UA237',
           trip_id: 1
         },
@@ -275,8 +279,10 @@ class Database {
           name: 'Flight from Orlando',
           departure_datetime: '2024-06-20T15:30:00.000Z', // 3:30 PM EDT
           departure_location: 'MCO',
+          departure_timezone: 'America/New_York',
           arrival_datetime: '2024-06-20T18:45:00.000Z',   // 6:45 PM EDT
           arrival_location: 'IAD',
+          arrival_timezone: 'America/New_York',
           carrier: 'UA238',
           trip_id: 1
         },
@@ -285,8 +291,10 @@ class Database {
           name: 'Flight to Orlando',
           departure_datetime: '2024-07-01T08:00:00.000Z', // 8:00 AM EDT
           departure_location: 'IAD',
+          departure_timezone: 'America/New_York',
           arrival_datetime: '2024-07-01T11:15:00.000Z',   // 11:15 AM EDT
           arrival_location: 'MCO',
+          arrival_timezone: 'America/New_York',
           carrier: 'AA1234',
           trip_id: 2
         },
@@ -294,8 +302,10 @@ class Database {
           name: 'Flight to New York',
           departure_datetime: '2024-07-05T14:00:00.000Z', // 2:00 PM EDT
           departure_location: 'MCO',
+          departure_timezone: 'America/New_York',
           arrival_datetime: '2024-07-05T17:30:00.000Z',   // 5:30 PM EDT
           arrival_location: 'JFK',
+          arrival_timezone: 'America/New_York',
           carrier: 'DL567',
           trip_id: 2
         },
@@ -303,8 +313,10 @@ class Database {
           name: 'Flight back to DC',
           departure_datetime: '2024-07-10T10:30:00.000Z', // 10:30 AM EDT
           departure_location: 'JFK',
+          departure_timezone: 'America/New_York',
           arrival_datetime: '2024-07-10T12:00:00.000Z',   // 12:00 PM EDT
           arrival_location: 'IAD',
+          arrival_timezone: 'America/New_York',
           carrier: 'UA789',
           trip_id: 2
         },
@@ -313,19 +325,21 @@ class Database {
           name: 'Test Flight',
           departure_datetime: '2024-08-01T16:00:00.000Z', // 4:00 PM EDT
           departure_location: 'IAD',
+          departure_timezone: 'America/New_York',
           arrival_datetime: '2024-08-01T19:30:00.000Z',   // 7:30 PM EDT
           arrival_location: 'LAX',
+          arrival_timezone: 'America/New_York',
           carrier: 'UA999',
           trip_id: 1
         }
       ];
 
-      const stmt = this.db.prepare('INSERT INTO legs (name, departure_datetime, departure_location, arrival_datetime, arrival_location, carrier, trip_id) VALUES (?, ?, ?, ?, ?, ?, ?)');
+      const stmt = this.db.prepare('INSERT INTO legs (name, departure_datetime, departure_location, departure_timezone, arrival_datetime, arrival_location, arrival_timezone, carrier, trip_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
       let completed = 0;
       let hasError = false;
 
       sampleLegs.forEach(leg => {
-        stmt.run(leg.name, leg.departure_datetime, leg.departure_location, leg.arrival_datetime, leg.arrival_location, leg.carrier, leg.trip_id, (err) => {
+        stmt.run(leg.name, leg.departure_datetime, leg.departure_location, leg.departure_timezone, leg.arrival_datetime, leg.arrival_location, leg.arrival_timezone, leg.carrier, leg.trip_id, (err) => {
           if (err && !hasError) {
             console.error('Error inserting sample legs:', err.message);
             hasError = true;
@@ -681,11 +695,11 @@ class Database {
   // Create new leg
   createLeg(legData) {
     return new Promise((resolve, reject) => {
-      const { name, departure_datetime, departure_location, arrival_datetime, arrival_location, carrier, trip_id } = legData;
+      const { name, departure_datetime, departure_location, departure_timezone, arrival_datetime, arrival_location, arrival_timezone, carrier, trip_id } = legData;
       const db = this.db;
       
-      this.db.run('INSERT INTO legs (name, departure_datetime, departure_location, arrival_datetime, arrival_location, carrier, trip_id) VALUES (?, ?, ?, ?, ?, ?, ?)', 
-        [name, departure_datetime, departure_location, arrival_datetime, arrival_location, carrier, trip_id], function(err) {
+      this.db.run('INSERT INTO legs (name, departure_datetime, departure_location, departure_timezone, arrival_datetime, arrival_location, arrival_timezone, carrier, trip_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+        [name, departure_datetime, departure_location, departure_timezone, arrival_datetime, arrival_location, arrival_timezone, carrier, trip_id], function(err) {
           if (err) {
             reject(err);
           } else {
@@ -705,7 +719,7 @@ class Database {
   // Update leg
   updateLeg(id, updateData) {
     return new Promise((resolve, reject) => {
-      const { name, departure_datetime, departure_location, arrival_datetime, arrival_location, carrier } = updateData;
+      const { name, departure_datetime, departure_location, departure_timezone, arrival_datetime, arrival_location, arrival_timezone, carrier } = updateData;
       const db = this.db;
       
       // First check if leg exists
@@ -735,6 +749,10 @@ class Database {
           updateFields.push('departure_location = ?');
           updateValues.push(departure_location);
         }
+        if (departure_timezone !== undefined) {
+          updateFields.push('departure_timezone = ?');
+          updateValues.push(departure_timezone);
+        }
         if (arrival_datetime !== undefined) {
           updateFields.push('arrival_datetime = ?');
           updateValues.push(arrival_datetime);
@@ -742,6 +760,10 @@ class Database {
         if (arrival_location !== undefined) {
           updateFields.push('arrival_location = ?');
           updateValues.push(arrival_location);
+        }
+        if (arrival_timezone !== undefined) {
+          updateFields.push('arrival_timezone = ?');
+          updateValues.push(arrival_timezone);
         }
         if (carrier !== undefined) {
           updateFields.push('carrier = ?');
