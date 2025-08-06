@@ -242,18 +242,22 @@ function TripDetails({ trip, onBack, apiBase }) {
       </button>
       
       <div className="header">
-        <EditableField
-          value={currentTrip.name}
-          onSave={(value) => handleTripUpdate('name', value)}
-          className="trip-title"
-          placeholder="Trip name"
-        />
-        <EditableField
-          value={currentTrip.description || ''}
-          onSave={(value) => handleTripUpdate('description', value)}
-          className="trip-description"
-          placeholder="Add trip description"
-        />
+        <h1>
+          <EditableField
+            value={currentTrip.name}
+            onSave={(value) => handleTripUpdate('name', value)}
+            className="trip-title"
+            placeholder="Trip name"
+          />
+        </h1>
+        <p>
+          <EditableField
+            value={currentTrip.description || ''}
+            onSave={(value) => handleTripUpdate('description', value)}
+            className="trip-description"
+            placeholder="Add trip description"
+          />
+        </p>
         <div className="timezone-info">
           Times displayed in: <TimezonePicker 
             value={currentTimezone}
