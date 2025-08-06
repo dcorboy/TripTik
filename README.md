@@ -1,4 +1,4 @@
-# Trip Manager Application
+# TripTik Application
 
 A full-stack application for managing trips and their associated legs (flights, etc.) built with Node.js/Express backend and Preact frontend.
 

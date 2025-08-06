@@ -64,7 +64,7 @@ function App() {
   return (
     <div className="container">
       <div className="header">
-        <h1>Trip Manager</h1>
+        <h1>TripTik</h1>
         <p>Select a trip to view its details</p>
       </div>
       
