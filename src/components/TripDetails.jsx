@@ -301,14 +301,12 @@ function TripDetails({ trip, onBack, apiBase }) {
                       className="leg-name"
                       placeholder="Leg name"
                     />
-                    {leg.carrier && (
-                      <EditableField
-                        value={leg.carrier}
-                        onSave={(value) => handleLegUpdate(leg.id, 'carrier', value)}
-                        className="leg-carrier"
-                        placeholder="Carrier"
-                      />
-                    )}
+                    <EditableField
+                      value={leg.carrier || ''}
+                      onSave={(value) => handleLegUpdate(leg.id, 'carrier', value)}
+                      className="leg-carrier"
+                      placeholder="flight/ship"
+                    />
                   </div>
                   <button
                     className="delete-leg-btn fa-solid fa-trash"
