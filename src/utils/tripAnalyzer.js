@@ -1,6 +1,8 @@
 import { formatInTimezone } from '../config/timezone.js';
 import { formatFullDate, formatShortDate, formatTimeWithZone } from './dateFormatters.js';
 
+const LAYOVER_THRESHOLD_HOURS = 8; // Stopovers longer than this will show detailed info
+
 /**
  * Calculate duration between two dates
  * @param {string} startDateTime - ISO datetime string
@@ -53,104 +55,113 @@ export function analyzeTrip(trip, legs) {
   
   if (legs.length === 0) {
     output.push("No legs found for this trip.");
-  } else {
-    output.push("Full trip:");
+    return output.join('\n');
+  }
+
+  output.push("Full trip:");
+  const firstLeg = legs[0];
+  const lastLeg = legs[legs.length - 1];
+  
+  if (firstLeg && lastLeg) {
+    const departureDate = formatFullDate(firstLeg.departure_datetime, firstLeg.departure_timezone || 'America/New_York');
+    const arrivalDate = formatFullDate(lastLeg.arrival_datetime, lastLeg.arrival_timezone || 'America/New_York');
+    output.push(`${departureDate} - ${arrivalDate}`);
     
-    // Get trip bounds from first and last legs
-    const firstLeg = legs[0];
-    const lastLeg = legs[legs.length - 1];
+    const depTime = formatTimeWithZone(firstLeg.departure_datetime, firstLeg.departure_timezone || 'America/New_York');
+    const depDate = formatShortDate(firstLeg.departure_datetime, firstLeg.departure_timezone || 'America/New_York');
+    const depLocation = firstLeg.departure_location || '';
+    const depCarrier = firstLeg.carrier || '';
+    output.push(`DEP ${depLocation} ${depTime} ${depDate} (${depCarrier})`);
     
-    if (firstLeg && lastLeg) {
-      const departureDate = formatFullDate(
-        firstLeg.departure_datetime, 
-        firstLeg.departure_timezone || 'America/New_York'
-      );
-      const arrivalDate = formatFullDate(
-        lastLeg.arrival_datetime, 
-        lastLeg.arrival_timezone || 'America/New_York'
-      );
-      
-      output.push(`${departureDate} - ${arrivalDate}`);
-      
-      // Add departure and arrival summary
-      const depTime = formatTimeWithZone(
-        firstLeg.departure_datetime,
-        firstLeg.departure_timezone || 'America/New_York'
-      );
-      const depDate = formatShortDate(
-        firstLeg.departure_datetime,
-        firstLeg.departure_timezone || 'America/New_York'
-      );
-      const depLocation = firstLeg.departure_location || '';
-      const depCarrier = firstLeg.carrier || '';
-      
-      const arrTime = formatTimeWithZone(
-        lastLeg.arrival_datetime,
-        lastLeg.arrival_timezone || 'America/New_York'
-      );
-      const arrDate = formatShortDate(
-        lastLeg.arrival_datetime,
-        lastLeg.arrival_timezone || 'America/New_York'
-      );
-      const arrLocation = lastLeg.arrival_location || '';
-      const arrCarrier = lastLeg.carrier || '';
-      
-      output.push(`DEP ${depLocation} ${depTime} ${depDate} (${depCarrier})`);
-      output.push(`ARR ${arrLocation} ${arrTime} ${arrDate} (${arrCarrier})`);
-      
-      // Calculate and display duration (no minutes for total trip)
-      const duration = calculateDuration(firstLeg.departure_datetime, lastLeg.arrival_datetime, false);
-      output.push(`Duration: ${duration}`);
-    }
+    const arrTime = formatTimeWithZone(lastLeg.arrival_datetime, lastLeg.arrival_timezone || 'America/New_York');
+    const arrDate = formatShortDate(lastLeg.arrival_datetime, lastLeg.arrival_timezone || 'America/New_York');
+    const arrLocation = lastLeg.arrival_location || '';
+    const arrCarrier = lastLeg.carrier || '';
+    output.push(`ARR ${arrLocation} ${arrTime} ${arrDate} (${arrCarrier})`);
     
-    output.push('');
-    output.push("Legs in this trip:");
-    legs.forEach((leg, index) => {
-      // Leg name
-      output.push(leg.name);
-      
-      // Departure info
-      const depTime = formatTimeWithZone(
-        leg.departure_datetime,
-        leg.departure_timezone || 'America/New_York'
-      );
-      const depDate = formatShortDate(
-        leg.departure_datetime,
-        leg.departure_timezone || 'America/New_York'
-      );
-      const depLocation = leg.departure_location || '';
-      const depCarrier = leg.carrier || '';
-      output.push(`DEP ${depLocation} ${depTime} ${depDate} (${depCarrier})`);
-      
-      // Arrival info
-      const arrTime = formatTimeWithZone(
-        leg.arrival_datetime,
-        leg.arrival_timezone || 'America/New_York'
-      );
-      const arrDate = formatShortDate(
-        leg.arrival_datetime,
-        leg.arrival_timezone || 'America/New_York'
-      );
-      const arrLocation = leg.arrival_location || '';
-      const arrCarrier = leg.carrier || '';
-      output.push(`ARR ${arrLocation} ${arrTime} ${arrDate} (${arrCarrier})`);
-      
-      // Leg duration
-      const legDuration = calculateDuration(leg.departure_datetime, leg.arrival_datetime, true);
-      output.push(`(${legDuration})`);
-      output.push('');
-      
-      // Layover time (except for last leg)
-      if (index < legs.length - 1) {
-        const nextLeg = legs[index + 1];
-        const layoverDuration = calculateDuration(leg.arrival_datetime, nextLeg.departure_datetime);
-        const arrivalLocation = leg.arrival_location || 'Unknown';
-        output.push(`Time in ${arrivalLocation}: ${layoverDuration}.`);
-      }
-      
-      output.push('');
-    });
+    const duration = calculateDuration(firstLeg.departure_datetime, lastLeg.arrival_datetime, false); // No minutes for total trip
+    output.push(`Duration: ${duration}`);
   }
   
+  output.push('');
+  output.push("Legs in this trip:");
+  
+  legs.forEach((leg, index) => {
+    output.push(leg.name);
+    
+    const depTime = formatTimeWithZone(leg.departure_datetime, leg.departure_timezone || 'America/New_York');
+    const depDate = formatShortDate(leg.departure_datetime, leg.departure_timezone || 'America/New_York');
+    const depLocation = leg.departure_location || '';
+    const depCarrier = leg.carrier || '';
+    output.push(`DEP ${depLocation} ${depTime} ${depDate} (${depCarrier})`);
+    
+    const arrTime = formatTimeWithZone(leg.arrival_datetime, leg.arrival_timezone || 'America/New_York');
+    const arrDate = formatShortDate(leg.arrival_datetime, leg.arrival_timezone || 'America/New_York');
+    const arrLocation = leg.arrival_location || '';
+    const arrCarrier = leg.carrier || '';
+    output.push(`ARR ${arrLocation} ${arrTime} ${arrDate} (${arrCarrier})`);
+    
+    const legDuration = calculateDuration(leg.departure_datetime, leg.arrival_datetime, true); // Include minutes for leg duration
+    output.push(`(${legDuration})`);
+    output.push('');
+    
+    // Layover time (except for last leg)
+    if (index < legs.length - 1) {
+      const nextLeg = legs[index + 1];
+      const layoverDuration = calculateDuration(leg.arrival_datetime, nextLeg.departure_datetime);
+      const arrivalLocation = leg.arrival_location || 'Unknown';
+      output.push(`Time in ${arrivalLocation}: ${layoverDuration}.`);
+    }
+    output.push('');
+  });
+
+  // Destination Details section for stopovers longer than threshold
+  const longStopovers = [];
+  for (let i = 0; i < legs.length - 1; i++) {
+    const currentLeg = legs[i];
+    const nextLeg = legs[i + 1];
+    const stopoverDuration = calculateDuration(currentLeg.arrival_datetime, nextLeg.departure_datetime);
+    
+    // Check if stopover duration is longer than threshold
+    const arrivalTime = new Date(currentLeg.arrival_datetime);
+    const departureTime = new Date(nextLeg.departure_datetime);
+    const durationHours = (departureTime - arrivalTime) / (1000 * 60 * 60);
+    
+    if (durationHours > LAYOVER_THRESHOLD_HOURS) {
+      longStopovers.push({
+        location: currentLeg.arrival_location || 'Unknown',
+        arrivalLeg: currentLeg,
+        departureLeg: nextLeg,
+        duration: stopoverDuration
+      });
+    }
+  }
+
+  if (longStopovers.length > 0) {
+    output.push("Destination Details:");
+    longStopovers.forEach((stopover, index) => {
+      output.push(`Detail for ${stopover.location}`);
+      output.push(stopover.duration);
+      
+      // Show arrival leg
+      const arrTime = formatTimeWithZone(stopover.arrivalLeg.arrival_datetime, stopover.arrivalLeg.arrival_timezone || 'America/New_York');
+      const arrDate = formatShortDate(stopover.arrivalLeg.arrival_datetime, stopover.arrivalLeg.arrival_timezone || 'America/New_York');
+      const arrLocation = stopover.arrivalLeg.arrival_location || '';
+      const arrCarrier = stopover.arrivalLeg.carrier || '';
+      output.push(`ARR ${arrLocation} ${arrTime} ${arrDate} (${arrCarrier})`);
+      
+      // Show departure leg
+      const depTime = formatTimeWithZone(stopover.departureLeg.departure_datetime, stopover.departureLeg.departure_timezone || 'America/New_York');
+      const depDate = formatShortDate(stopover.departureLeg.departure_datetime, stopover.departureLeg.departure_timezone || 'America/New_York');
+      const depLocation = stopover.departureLeg.departure_location || '';
+      const depCarrier = stopover.departureLeg.carrier || '';
+      output.push(`DEP ${depLocation} ${depTime} ${depDate} (${depCarrier})`);
+      
+      if (index < longStopovers.length - 1) {
+        output.push('');
+      }
+    });
+  }
+
   return output.join('\n');
 } 
