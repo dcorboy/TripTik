@@ -12,12 +12,15 @@ function EditableField({
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
+  const [originalValue, setOriginalValue] = useState(value);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const inputRef = useRef(null);
 
   useEffect(() => {
-    setEditValue(value);
-  }, [value]);
+    if (!isEditing) {
+      setEditValue(value);
+    }
+  }, [value, isEditing]);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -37,13 +40,15 @@ function EditableField({
     if (type === 'datetime-local') {
       setShowDatePicker(true);
     } else {
+      setOriginalValue(value);
+      setEditValue(value);
       setIsEditing(true);
     }
   };
 
   const handleBlur = () => {
     setIsEditing(false);
-    if (editValue !== value) {
+    if (editValue !== originalValue) {
       onSave(parseValue(editValue));
     }
   };
@@ -56,9 +61,15 @@ function EditableField({
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      handleBlur();
+      e.stopPropagation();
+      setIsEditing(false);
+      // Get the current value directly from the input element
+      const currentValue = inputRef.current ? inputRef.current.value : editValue;
+      if (currentValue !== originalValue) {
+        onSave(parseValue(currentValue));
+      }
     } else if (e.key === 'Escape') {
-      setEditValue(value);
+      setEditValue(originalValue);
       setIsEditing(false);
     }
   };
