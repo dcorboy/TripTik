@@ -138,12 +138,14 @@ export function analyzeTrip(trip, legs) {
       // Leg duration
       const legDuration = calculateDuration(leg.departure_datetime, leg.arrival_datetime, true);
       output.push(`(${legDuration})`);
+      output.push('');
       
       // Layover time (except for last leg)
       if (index < legs.length - 1) {
         const nextLeg = legs[index + 1];
         const layoverDuration = calculateDuration(leg.arrival_datetime, nextLeg.departure_datetime);
-        output.push(`Duration: ${layoverDuration}.`);
+        const arrivalLocation = leg.arrival_location || 'Unknown';
+        output.push(`Time in ${arrivalLocation}: ${layoverDuration}.`);
       }
       
       output.push('');
