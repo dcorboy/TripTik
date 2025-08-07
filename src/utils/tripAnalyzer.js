@@ -11,37 +11,76 @@ const LAYOVER_THRESHOLD_HOURS = 8; // Stopovers longer than this will show detai
  * @returns {string} - Formatted duration string
  */
 function calculateDuration(startDateTime, endDateTime, includeMinutes = false) {
-  if (!startDateTime || !endDateTime) return '';
-  
   const start = new Date(startDateTime);
   const end = new Date(endDateTime);
   const diffMs = end - start;
-  
-  if (diffMs <= 0) return '0 minutes';
-  
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+  let result = '';
   
-  let duration = '';
   if (diffDays > 0) {
-    // Multi-day duration: show days and hours, no minutes
-    duration += `${diffDays} day${diffDays !== 1 ? 's' : ''}`;
+    result += `${diffDays} day${diffDays > 1 ? 's' : ''}`;
     if (diffHours > 0) {
-      duration += `, ${diffHours} hour${diffHours !== 1 ? 's' : ''}`;
+      result += `, ${diffHours} hour${diffHours > 1 ? 's' : ''}`;
     }
   } else if (diffHours > 0) {
-    // Less than a day but more than an hour: show hours and minutes
-    duration += `${diffHours} hour${diffHours !== 1 ? 's' : ''}`;
+    result += `${diffHours} hour${diffHours > 1 ? 's' : ''}`;
     if (includeMinutes && diffMinutes > 0) {
-      duration += `, ${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''}`;
+      result += `, ${diffMinutes} minute${diffMinutes > 1 ? 's' : ''}`;
     }
+  } else if (includeMinutes && diffMinutes > 0) {
+    result += `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''}`;
   } else {
-    // Less than an hour: show only minutes
-    duration += `${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''}`;
+    result = '0 minutes';
   }
   
-  return duration;
+  return result;
+}
+
+function generateDailyBreakdown(arrivalLeg, departureLeg) {
+  const arrival = new Date(arrivalLeg.arrival_datetime);
+  const departure = new Date(departureLeg.departure_datetime);
+  
+  // Get timezone-adjusted dates
+  const arrivalLocal = new Date(arrival.toLocaleString('en-US', { timeZone: arrivalLeg.arrival_timezone || 'America/New_York' }));
+  const departureLocal = new Date(departure.toLocaleString('en-US', { timeZone: departureLeg.departure_timezone || 'America/New_York' }));
+  
+  const arrivalDate = new Date(arrivalLocal.getFullYear(), arrivalLocal.getMonth(), arrivalLocal.getDate());
+  const departureDate = new Date(departureLocal.getFullYear(), departureLocal.getMonth(), departureLocal.getDate());
+  
+  const days = [];
+  const currentDate = new Date(arrivalDate);
+  
+  while (currentDate <= departureDate) {
+    const dayOfWeek = currentDate.toLocaleDateString('en-US', { weekday: 'short' });
+    const month = currentDate.getMonth() + 1;
+    const day = currentDate.getDate();
+    
+    let dayLine = `${month}/${day} ${dayOfWeek}`;
+    
+    // Add arrival info for first day
+    if (currentDate.getTime() === arrivalDate.getTime()) {
+      const arrivalTime = formatTimeWithZone(arrivalLeg.arrival_datetime, arrivalLeg.arrival_timezone || 'America/New_York');
+      const arrivalLocation = arrivalLeg.arrival_location || '';
+      const arrivalCarrier = arrivalLeg.carrier || '';
+      dayLine += ` ${arrivalTime} ARR ${arrivalLocation} (${arrivalCarrier})`;
+    }
+    
+    // Add departure info for last day
+    if (currentDate.getTime() === departureDate.getTime()) {
+      const departureTime = formatTimeWithZone(departureLeg.departure_datetime, departureLeg.departure_timezone || 'America/New_York');
+      const departureLocation = departureLeg.departure_location || '';
+      const departureCarrier = departureLeg.carrier || '';
+      dayLine += ` ${departureTime} DEP ${departureLocation} (${departureCarrier})`;
+    }
+    
+    days.push(dayLine);
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  
+  return days;
 }
 
 /**
@@ -52,7 +91,6 @@ function calculateDuration(startDateTime, endDateTime, includeMinutes = false) {
  */
 export function analyzeTrip(trip, legs) {
   let output = [];
-  
   if (legs.length === 0) {
     output.push("No legs found for this trip.");
     return output.join('\n');
@@ -156,6 +194,16 @@ export function analyzeTrip(trip, legs) {
       const depLocation = stopover.departureLeg.departure_location || '';
       const depCarrier = stopover.departureLeg.carrier || '';
       output.push(`DEP ${depLocation} ${depTime} ${depDate} (${depCarrier})`);
+      
+      // Generate daily breakdown
+      const dailyLines = generateDailyBreakdown(
+        stopover.arrivalLeg,
+        stopover.departureLeg
+      );
+      
+      dailyLines.forEach(line => {
+        output.push(line);
+      });
       
       if (index < longStopovers.length - 1) {
         output.push('');
