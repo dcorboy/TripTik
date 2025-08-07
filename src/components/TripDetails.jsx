@@ -2,6 +2,7 @@ import { useState, useEffect } from 'preact/hooks';
 import EditableField from './EditableField.jsx';
 import { analyzeTrip } from '../utils/tripAnalyzer.js';
 import { formatInTimezone, formatTimeInTimezone, formatDateInTimezone, setUserTimezone, getUserTimezone } from '../config/timezone.js';
+import { getTimezoneForLocation } from '../utils/locationTimezone.js';
 import TimezonePicker from './TimezonePicker.jsx';
 
 function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
@@ -122,7 +123,18 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
       // Special handling for timezone changes
       let updateData = { [field]: value };
       
-      if (field === 'departure_timezone' || field === 'arrival_timezone') {
+      // Auto-set timezone when location changes
+      if (field === 'departure_location') {
+        const timezone = getTimezoneForLocation(value);
+        if (timezone) {
+          updateData.departure_timezone = timezone;
+        }
+      } else if (field === 'arrival_location') {
+        const timezone = getTimezoneForLocation(value);
+        if (timezone) {
+          updateData.arrival_timezone = timezone;
+        }
+      } else if (field === 'departure_timezone' || field === 'arrival_timezone') {
         // For timezone changes, we don't need to modify the datetime
         // The display will automatically show the time in the new timezone
         // Just update the timezone field
@@ -213,10 +225,10 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
         name: 'New Leg',
         departure_datetime: new Date().toISOString(),
         departure_location: '',
-        departure_timezone: 'America/New_York',
+        departure_timezone: currentTimezone,
         arrival_datetime: new Date().toISOString(),
         arrival_location: '',
-        arrival_timezone: 'America/New_York',
+        arrival_timezone: currentTimezone,
         carrier: '',
         trip_id: trip.id
       };
