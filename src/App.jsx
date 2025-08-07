@@ -40,6 +40,91 @@ function App() {
     setSelectedTrip(null);
   };
 
+  const handleTripUpdate = (updatedTrip) => {
+    // Update the trip in the trips list
+    setTrips(prevTrips => 
+      prevTrips.map(trip => 
+        trip.id === updatedTrip.id ? updatedTrip : trip
+      )
+    );
+    
+    // Update the selected trip if it's the same one
+    setSelectedTrip(updatedTrip);
+  };
+
+  const handleLegsChange = async () => {
+    // Refresh the trip data to update start_date and end_date
+    try {
+      const response = await fetch(`${API_BASE}/users/1/trips`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch trips');
+      }
+      const tripsData = await response.json();
+      setTrips(tripsData);
+      
+      // Update the selected trip if it exists
+      if (selectedTrip) {
+        const updatedSelectedTrip = tripsData.find(trip => trip.id === selectedTrip.id);
+        if (updatedSelectedTrip) {
+          setSelectedTrip(updatedSelectedTrip);
+        }
+      }
+    } catch (err) {
+      console.error('Error refreshing trips:', err);
+    }
+  };
+
+  const handleAddTrip = async () => {
+    try {
+      const newTrip = {
+        name: 'New Trip',
+        description: '',
+        user_id: 1 // Hardcoded user ID for now
+      };
+
+      const response = await fetch(`${API_BASE}/trips`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newTrip)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create trip');
+      }
+
+      const createdTrip = await response.json();
+      setTrips(prevTrips => [...prevTrips, createdTrip]);
+    } catch (err) {
+      console.error('Error creating trip:', err);
+      // You could show a toast notification here
+    }
+  };
+
+  const handleDeleteTrip = async (tripId) => {
+    try {
+      const response = await fetch(`${API_BASE}/trips/${tripId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete trip');
+      }
+
+      // Remove the trip from the list
+      setTrips(prevTrips => prevTrips.filter(trip => trip.id !== tripId));
+      
+      // If the deleted trip was selected, clear the selection
+      if (selectedTrip && selectedTrip.id === tripId) {
+        setSelectedTrip(null);
+      }
+    } catch (err) {
+      console.error('Error deleting trip:', err);
+      // You could show a toast notification here
+    }
+  };
+
   if (loading) {
     return (
       <div className="container">
@@ -73,11 +158,15 @@ function App() {
           trip={selectedTrip} 
           onBack={handleBackToList}
           apiBase={API_BASE}
+          onTripUpdate={handleTripUpdate}
+          onLegsChange={handleLegsChange}
         />
       ) : (
         <TripList 
           trips={trips} 
           onTripSelect={handleTripSelect}
+          onAddTrip={handleAddTrip}
+          onDeleteTrip={handleDeleteTrip}
         />
       )}
     </div>

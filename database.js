@@ -612,8 +612,20 @@ class Database {
             return;
           }
           
-          // Get the updated trip
-          db.get('SELECT * FROM trips WHERE id = ?', [id], (err, row) => {
+          // Get the updated trip with calculated dates
+          db.get(`
+            SELECT 
+              t.id, 
+              t.name, 
+              t.description,
+              t.user_id,
+              MIN(l.departure_datetime) as start_date,
+              MAX(l.arrival_datetime) as end_date
+            FROM trips t
+            LEFT JOIN legs l ON t.id = l.trip_id
+            WHERE t.id = ?
+            GROUP BY t.id, t.name, t.description, t.user_id
+          `, [id], (err, row) => {
             if (err) {
               reject(err);
             } else {

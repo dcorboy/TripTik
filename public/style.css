@@ -145,40 +145,104 @@ body {
     font-weight: 500;
 }
 
+/* Trip List Styles */
 .trip-list {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    overflow: hidden;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
 .trip-item {
-    padding: 20px;
-    border-bottom: 1px solid #eee;
-    cursor: pointer;
-    transition: background-color 0.2s;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .trip-item:hover {
-    background-color: #f8f9fa;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
 }
 
 .trip-item:last-child {
-    border-bottom: none;
+  margin-bottom: 0;
+}
+
+.trip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.trip-header-left {
+  flex: 1;
 }
 
 .trip-name {
-    font-size: 18px;
-    font-weight: 600;
-    color: #2c3e50;
-    margin-bottom: 5px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.trip-description {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 5px;
 }
 
 .trip-dates {
-    color: #1976d2;
-    font-size: 12px;
-    font-weight: 500;
-    margin-top: 8px;
+  font-size: 12px;
+  color: #888;
+  font-style: italic;
+}
+
+.delete-trip-btn {
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  font-size: 14px;
+}
+
+.delete-trip-btn:hover {
+  background-color: #f8d7da;
+}
+
+/* Add trip button */
+.add-trip-container {
+  padding: 20px;
+  text-align: center;
+  border-top: 1px solid #eee;
+  margin-top: 20px;
+}
+
+.add-trip-btn {
+  background: var(--actionBGcolor);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.add-trip-btn:hover {
+  background: #218838;
+}
+
+.add-trip-btn:active {
+  background: #1e7e34;
 }
 
 .legs-container {

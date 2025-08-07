@@ -96,6 +96,7 @@ export function analyzeTrip(trip, legs) {
     return output.join('\n');
   }
 
+  output.push("TripTik for " + trip.name);
   output.push("Full trip:");
   const firstLeg = legs[0];
   const lastLeg = legs[legs.length - 1];
@@ -122,7 +123,7 @@ export function analyzeTrip(trip, legs) {
   }
   
   output.push('');
-  output.push("Legs in this trip:");
+  output.push("Leg Details:");
   
   legs.forEach((leg, index) => {
     output.push(leg.name);
@@ -137,7 +138,7 @@ export function analyzeTrip(trip, legs) {
     const arrDate = formatShortDate(leg.arrival_datetime, leg.arrival_timezone || 'America/New_York');
     const arrLocation = leg.arrival_location || '';
     const arrCarrier = leg.carrier || '';
-    output.push(`ARR ${arrLocation} ${arrTime} ${arrDate} (${arrCarrier})`);
+    output.push(`ARR ${arrLocation} ${arrTime} ${arrDate}`);
     
     const legDuration = calculateDuration(leg.departure_datetime, leg.arrival_datetime, true); // Include minutes for leg duration
     output.push(`(${legDuration})`);

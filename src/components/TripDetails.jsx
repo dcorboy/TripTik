@@ -4,7 +4,7 @@ import { analyzeTrip } from '../utils/tripAnalyzer.js';
 import { formatInTimezone, formatTimeInTimezone, formatDateInTimezone, setUserTimezone, getUserTimezone } from '../config/timezone.js';
 import TimezonePicker from './TimezonePicker.jsx';
 
-function TripDetails({ trip, onBack, apiBase }) {
+function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
   const [legs, setLegs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -98,6 +98,11 @@ function TripDetails({ trip, onBack, apiBase }) {
 
       const updatedTrip = await response.json();
       setCurrentTrip(updatedTrip);
+      
+      // Notify parent component about the trip update
+      if (onTripUpdate) {
+        onTripUpdate(updatedTrip);
+      }
     } catch (err) {
       console.error('Error updating trip:', err);
     }
@@ -150,6 +155,12 @@ function TripDetails({ trip, onBack, apiBase }) {
           return dateA - dateB;
         });
         updateAnalysis(sortedLegs);
+        
+        // Notify parent about legs change
+        if (onLegsChange) {
+          onLegsChange();
+        }
+        
         return sortedLegs;
       });
     } catch (err) {
@@ -180,6 +191,12 @@ function TripDetails({ trip, onBack, apiBase }) {
       setLegs(prevLegs => {
         const filteredLegs = prevLegs.filter(leg => leg.id !== legId);
         updateAnalysis(filteredLegs);
+        
+        // Notify parent about legs change
+        if (onLegsChange) {
+          onLegsChange();
+        }
+        
         return filteredLegs;
       });
     } catch (err) {
@@ -227,6 +244,12 @@ function TripDetails({ trip, onBack, apiBase }) {
           return dateA - dateB;
         });
         updateAnalysis(sortedLegs);
+        
+        // Notify parent about legs change
+        if (onLegsChange) {
+          onLegsChange();
+        }
+        
         return sortedLegs;
       });
     } catch (err) {
@@ -280,6 +303,15 @@ function TripDetails({ trip, onBack, apiBase }) {
           <div className="legs-container">
             <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
               No legs found for this trip. Add some legs to get started!
+            </div>
+            <div className="add-leg-container">
+              <button
+                className="add-leg-btn"
+                onClick={handleAddLeg}
+                title="Add new leg"
+              >
+                + Add Leg
+              </button>
             </div>
           </div>
           <div className="result">
