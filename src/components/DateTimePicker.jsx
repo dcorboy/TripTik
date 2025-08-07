@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 
-function DateTimePicker({ value, onChange, onClose }) {
+function DateTimePicker({ value, onChange, onClose, timezone = 'UTC' }) {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -9,13 +9,26 @@ function DateTimePicker({ value, onChange, onClose }) {
 
   useEffect(() => {
     if (value) {
-      const date = new Date(value);
-      const dateString = date.toISOString().split('T')[0];
-      const timeString = date.toTimeString().slice(0, 5);
+      // Convert UTC datetime to the specified timezone for display
+      const utcDate = new Date(value);
+      
+      // Create a date in the target timezone
+      const timezoneDate = new Date(utcDate.toLocaleString('en-US', { timeZone: timezone }));
+      
+      // Extract date and time components
+      const year = timezoneDate.getFullYear();
+      const month = String(timezoneDate.getMonth() + 1).padStart(2, '0');
+      const day = String(timezoneDate.getDate()).padStart(2, '0');
+      const hours = String(timezoneDate.getHours()).padStart(2, '0');
+      const minutes = String(timezoneDate.getMinutes()).padStart(2, '0');
+      
+      const dateString = `${year}-${month}-${day}`;
+      const timeString = `${hours}:${minutes}`;
+      
       setSelectedDate(dateString);
       setSelectedTime(timeString);
-      setSelectedDay(date.getDate());
-      setCurrentMonth(new Date(date.getFullYear(), date.getMonth(), 1));
+      setSelectedDay(timezoneDate.getDate());
+      setCurrentMonth(new Date(year, timezoneDate.getMonth(), 1));
     } else {
       const now = new Date();
       const dateString = now.toISOString().split('T')[0];
@@ -25,7 +38,7 @@ function DateTimePicker({ value, onChange, onClose }) {
       setSelectedDay(now.getDate());
       setCurrentMonth(new Date(now.getFullYear(), now.getMonth(), 1));
     }
-  }, [value]);
+  }, [value, timezone]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -80,11 +93,28 @@ function DateTimePicker({ value, onChange, onClose }) {
   const handleSave = () => {
     if (selectedDate && selectedTime) {
       const [hours, minutes] = selectedTime.split(':');
-      // Create date in local timezone to avoid timezone offset issues
       const [year, month, day] = selectedDate.split('-').map(Number);
-      const dateTime = new Date(year, month - 1, day, parseInt(hours), parseInt(minutes));
-      const isoString = dateTime.toISOString();
-      onChange(isoString);
+      
+      // Create the datetime in the specified timezone
+      const timezoneDate = new Date(year, month - 1, day, parseInt(hours), parseInt(minutes));
+      
+      // Convert to UTC by creating a date string in the timezone and parsing it
+      const timezoneString = timezoneDate.toLocaleString('en-US', { 
+        timeZone: timezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+      
+      // Parse the timezone string back to a Date object (which will be in local time)
+      const localDate = new Date(timezoneString);
+      
+      // Convert to UTC ISO string
+      const utcString = localDate.toISOString();
+      onChange(utcString);
     }
     onClose();
   };

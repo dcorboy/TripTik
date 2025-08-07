@@ -8,7 +8,8 @@ function EditableField({
   className = '', 
   placeholder = 'Click to edit',
   formatValue = (val) => val,
-  parseValue = (val) => val
+  parseValue = (val) => val,
+  timezone
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
@@ -108,6 +109,7 @@ function EditableField({
             setShowDatePicker(false);
           }}
           onClose={() => setShowDatePicker(false)}
+          timezone={timezone}
         />
       )}
     </>

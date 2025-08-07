@@ -378,6 +378,7 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
                         parseValue={parseDateFromPicker}
                         className="time-value"
                         placeholder="Departure date/time"
+                        timezone={leg.departure_timezone || 'America/New_York'}
                       />
                       <TimezonePicker
                         value={leg.departure_timezone || 'America/New_York'}
@@ -403,6 +404,7 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
                         parseValue={parseDateFromPicker}
                         className="time-value"
                         placeholder="Arrival date/time"
+                        timezone={leg.arrival_timezone || 'America/New_York'}
                       />
                       <TimezonePicker
                         value={leg.arrival_timezone || 'America/New_York'}
