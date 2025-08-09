@@ -13,6 +13,7 @@ class BaseLegParser {
       arrival_location: '',
       arrival_timezone: currentTimezone,
       carrier: '',
+      confirmation: null,
       trip_id: tripId,
     };
   }
@@ -33,6 +34,7 @@ class DemoFlightParser extends BaseLegParser {
       arrival_location: '',
       arrival_timezone: currentTimezone,
       carrier,
+      confirmation: text,
       trip_id: tripId,
     };
   }

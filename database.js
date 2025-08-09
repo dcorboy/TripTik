@@ -156,6 +156,7 @@ class Database {
         arrival_location TEXT,
         arrival_timezone TEXT,    -- IANA timezone identifier
         carrier TEXT,
+        confirmation TEXT,
         trip_id INTEGER,
         FOREIGN KEY (trip_id) REFERENCES trips (id)
       )`, (err) => {
@@ -163,8 +164,28 @@ class Database {
           console.error('Error creating legs table:', err.message);
           reject(err);
         } else {
-          console.log('Legs table created or already exists.');
-          resolve();
+          // Ensure the 'confirmation' column exists for pre-existing databases
+          this.db.all(`PRAGMA table_info('legs')`, (infoErr, rows) => {
+            if (infoErr) {
+              console.error('Error reading legs table info:', infoErr.message);
+              resolve();
+              return;
+            }
+            const hasConfirmation = rows.some((r) => r.name === 'confirmation');
+            if (!hasConfirmation) {
+              this.db.run(`ALTER TABLE legs ADD COLUMN confirmation TEXT`, (alterErr) => {
+                if (alterErr) {
+                  console.error('Error adding confirmation column to legs:', alterErr.message);
+                } else {
+                  console.log("Added 'confirmation' column to legs table.");
+                }
+                resolve();
+              });
+            } else {
+              console.log('Legs table created or already exists.');
+              resolve();
+            }
+          });
         }
       });
     });
@@ -334,12 +355,12 @@ class Database {
         }
       ];
 
-      const stmt = this.db.prepare('INSERT INTO legs (name, departure_datetime, departure_location, departure_timezone, arrival_datetime, arrival_location, arrival_timezone, carrier, trip_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+      const stmt = this.db.prepare('INSERT INTO legs (name, departure_datetime, departure_location, departure_timezone, arrival_datetime, arrival_location, arrival_timezone, carrier, confirmation, trip_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
       let completed = 0;
       let hasError = false;
 
       sampleLegs.forEach(leg => {
-        stmt.run(leg.name, leg.departure_datetime, leg.departure_location, leg.departure_timezone, leg.arrival_datetime, leg.arrival_location, leg.arrival_timezone, leg.carrier, leg.trip_id, (err) => {
+        stmt.run(leg.name, leg.departure_datetime, leg.departure_location, leg.departure_timezone, leg.arrival_datetime, leg.arrival_location, leg.arrival_timezone, leg.carrier, null, leg.trip_id, (err) => {
           if (err && !hasError) {
             console.error('Error inserting sample legs:', err.message);
             hasError = true;
@@ -707,11 +728,11 @@ class Database {
   // Create new leg
   createLeg(legData) {
     return new Promise((resolve, reject) => {
-      const { name, departure_datetime, departure_location, departure_timezone, arrival_datetime, arrival_location, arrival_timezone, carrier, trip_id } = legData;
+      const { name, departure_datetime, departure_location, departure_timezone, arrival_datetime, arrival_location, arrival_timezone, carrier, confirmation, trip_id } = legData;
       const db = this.db;
       
-      this.db.run('INSERT INTO legs (name, departure_datetime, departure_location, departure_timezone, arrival_datetime, arrival_location, arrival_timezone, carrier, trip_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', 
-        [name, departure_datetime, departure_location, departure_timezone, arrival_datetime, arrival_location, arrival_timezone, carrier, trip_id], function(err) {
+      this.db.run('INSERT INTO legs (name, departure_datetime, departure_location, departure_timezone, arrival_datetime, arrival_location, arrival_timezone, carrier, confirmation, trip_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+        [name, departure_datetime, departure_location, departure_timezone, arrival_datetime, arrival_location, arrival_timezone, carrier, confirmation, trip_id], function(err) {
           if (err) {
             reject(err);
           } else {
@@ -731,7 +752,7 @@ class Database {
   // Update leg
   updateLeg(id, updateData) {
     return new Promise((resolve, reject) => {
-      const { name, departure_datetime, departure_location, departure_timezone, arrival_datetime, arrival_location, arrival_timezone, carrier } = updateData;
+      const { name, departure_datetime, departure_location, departure_timezone, arrival_datetime, arrival_location, arrival_timezone, carrier, confirmation } = updateData;
       const db = this.db;
       
       // First check if leg exists
@@ -780,6 +801,10 @@ class Database {
         if (carrier !== undefined) {
           updateFields.push('carrier = ?');
           updateValues.push(carrier);
+        }
+        if (confirmation !== undefined) {
+          updateFields.push('confirmation = ?');
+          updateValues.push(confirmation);
         }
         
         if (updateFields.length === 0) {
