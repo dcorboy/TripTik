@@ -164,28 +164,8 @@ class Database {
           console.error('Error creating legs table:', err.message);
           reject(err);
         } else {
-          // Ensure the 'confirmation' column exists for pre-existing databases
-          this.db.all(`PRAGMA table_info('legs')`, (infoErr, rows) => {
-            if (infoErr) {
-              console.error('Error reading legs table info:', infoErr.message);
-              resolve();
-              return;
-            }
-            const hasConfirmation = rows.some((r) => r.name === 'confirmation');
-            if (!hasConfirmation) {
-              this.db.run(`ALTER TABLE legs ADD COLUMN confirmation TEXT`, (alterErr) => {
-                if (alterErr) {
-                  console.error('Error adding confirmation column to legs:', alterErr.message);
-                } else {
-                  console.log("Added 'confirmation' column to legs table.");
-                }
-                resolve();
-              });
-            } else {
-              console.log('Legs table created or already exists.');
-              resolve();
-            }
-          });
+          console.log('Legs table created or already exists.');
+          resolve();
         }
       });
     });
