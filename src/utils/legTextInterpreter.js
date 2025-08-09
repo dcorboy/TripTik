@@ -44,8 +44,8 @@ class GmailParser extends BaseLegParser {
   parse(text, { currentTimezone, tripId }) {
     const nowIso = new Date().toISOString();
     const firstLine = String(text).split(/\r?\n/)[0]?.trim() || '';
-    // Capture the carrier code and number that follow the en dash
-    const match = firstLine.match(/–\s+([A-Za-z]{2,4}\s+\d{1,5})\s*$/);
+    // Capture the carrier code and number that follow the en dash on the first line
+    const match = firstLine.match(/–\s+([A-Za-z]{2,4}\s+\d{1,5})/);
     const carrier = match ? match[1].trim() : '';
     return {
       name: 'Gmail-Parsed',
@@ -70,7 +70,6 @@ function classifyTextAndGetParser(text) {
 
   // Gmail format: first line ends with "– <AA> <123>"
   const firstLine = trimmed.split(/\r?\n/)[0]?.trim() || '';
-  console.log(`testing for ${firstLine}`);
   if (/–\s+[A-Za-z]{2,4}\s+\d{1,5}$/.test(firstLine)) {
     return new GmailParser();
   }

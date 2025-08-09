@@ -221,42 +221,39 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
     }
   };
 
-  const handlePastedLegTextChange = async (event) => {
-    const text = event.target.value;
-    setPastedLegText(text);
+  const createLegFromText = async (text) => {
     if (!text || text.trim().length === 0) return;
-
     try {
       const inferredLeg = parseLegFromText(text, currentTimezone, trip.id);
       const response = await fetch(`${apiBase}/legs`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(inferredLeg),
       });
-
       if (!response.ok) {
         throw new Error('Failed to create leg from pasted text');
       }
-
       const createdLeg = await response.json();
-
       setLegs((prevLegs) => {
         const updatedLegs = [...prevLegs, createdLeg];
-        const sortedLegs = updatedLegs.sort((a, b) => {
-          const dateA = new Date(a.departure_datetime);
-          const dateB = new Date(b.departure_datetime);
-          return dateA - dateB;
-        });
+        const sortedLegs = updatedLegs.sort((a, b) => new Date(a.departure_datetime) - new Date(b.departure_datetime));
         updateAnalysis(sortedLegs);
         if (onLegsChange) onLegsChange();
         return sortedLegs;
       });
-      // Clear the input after successful creation to prevent duplicate submissions
       setPastedLegText('');
     } catch (err) {
       console.error('Error creating leg from pasted text:', err);
+    }
+  };
+
+  const handlePastedLegTextPaste = async (event) => {
+    const clipboard = event.clipboardData || window.clipboardData;
+    if (!clipboard) return;
+    const text = clipboard.getData ? clipboard.getData('text/plain') : '';
+    if (text && text.length > 0) {
+      event.preventDefault();
+      await createLegFromText(text);
     }
   };
 
@@ -370,7 +367,8 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
                 className="pasted-leg-input"
                 placeholder="Paste Leg Info"
                 value={pastedLegText}
-                onInput={handlePastedLegTextChange}
+                onInput={(e) => setPastedLegText(e.target.value)}
+                onPaste={handlePastedLegTextPaste}
                 style={{ marginLeft: '10px', flex: '1 1 auto' }}
               />
             </div>
@@ -478,7 +476,8 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
                 className="pasted-leg-input"
                 placeholder="Paste Leg Info"
                 value={pastedLegText}
-                onInput={handlePastedLegTextChange}
+                onInput={(e) => setPastedLegText(e.target.value)}
+                onPaste={handlePastedLegTextPaste}
                 style={{ marginLeft: '10px', flex: '1 1 auto' }}
               />
             </div>
