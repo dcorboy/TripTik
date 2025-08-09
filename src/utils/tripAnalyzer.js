@@ -1,4 +1,4 @@
-import { formatInTimezone } from '../config/timezone.js';
+import { formatInTimezone, utcToLocal } from '../config/timezone.js';
 import { formatFullDate, formatShortDate, formatTimeWithZone } from './dateFormatters.js';
 
 const LAYOVER_THRESHOLD_HOURS = 8; // Stopovers longer than this will show detailed info
@@ -43,9 +43,9 @@ function generateDailyBreakdown(arrivalLeg, departureLeg) {
   const arrival = new Date(arrivalLeg.arrival_datetime);
   const departure = new Date(departureLeg.departure_datetime);
   
-  // Get timezone-adjusted dates
-  const arrivalLocal = new Date(arrival.toLocaleString('en-US', { timeZone: arrivalLeg.arrival_timezone || 'America/New_York' }));
-  const departureLocal = new Date(departure.toLocaleString('en-US', { timeZone: departureLeg.departure_timezone || 'America/New_York' }));
+  // Get timezone-adjusted dates using our utility
+  const arrivalLocal = utcToLocal(arrivalLeg.arrival_timezone || 'America/New_York', arrivalLeg.arrival_datetime);
+  const departureLocal = utcToLocal(departureLeg.departure_timezone || 'America/New_York', departureLeg.departure_datetime);
   
   const arrivalDate = new Date(arrivalLocal.getFullYear(), arrivalLocal.getMonth(), arrivalLocal.getDate());
   const departureDate = new Date(departureLocal.getFullYear(), departureLocal.getMonth(), departureLocal.getDate());

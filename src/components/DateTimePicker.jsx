@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'preact/hooks';
 
-function DateTimePicker({ value, onChange, onClose, timezone = 'UTC' }) {
+function DateTimePicker({ value, onChange, onClose }) {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -9,26 +9,23 @@ function DateTimePicker({ value, onChange, onClose, timezone = 'UTC' }) {
 
   useEffect(() => {
     if (value) {
-      // Convert UTC datetime to the specified timezone for display
-      const utcDate = new Date(value);
-      
-      // Create a date in the target timezone
-      const timezoneDate = new Date(utcDate.toLocaleString('en-US', { timeZone: timezone }));
+      // value should already be a local Date object
+      const localDate = value instanceof Date ? value : new Date(value);
       
       // Extract date and time components
-      const year = timezoneDate.getFullYear();
-      const month = String(timezoneDate.getMonth() + 1).padStart(2, '0');
-      const day = String(timezoneDate.getDate()).padStart(2, '0');
-      const hours = String(timezoneDate.getHours()).padStart(2, '0');
-      const minutes = String(timezoneDate.getMinutes()).padStart(2, '0');
+      const year = localDate.getFullYear();
+      const month = String(localDate.getMonth() + 1).padStart(2, '0');
+      const day = String(localDate.getDate()).padStart(2, '0');
+      const hours = String(localDate.getHours()).padStart(2, '0');
+      const minutes = String(localDate.getMinutes()).padStart(2, '0');
       
       const dateString = `${year}-${month}-${day}`;
       const timeString = `${hours}:${minutes}`;
       
       setSelectedDate(dateString);
       setSelectedTime(timeString);
-      setSelectedDay(timezoneDate.getDate());
-      setCurrentMonth(new Date(year, timezoneDate.getMonth(), 1));
+      setSelectedDay(localDate.getDate());
+      setCurrentMonth(new Date(year, localDate.getMonth(), 1));
     } else {
       const now = new Date();
       const dateString = now.toISOString().split('T')[0];
@@ -38,7 +35,7 @@ function DateTimePicker({ value, onChange, onClose, timezone = 'UTC' }) {
       setSelectedDay(now.getDate());
       setCurrentMonth(new Date(now.getFullYear(), now.getMonth(), 1));
     }
-  }, [value, timezone]);
+  }, [value]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -95,26 +92,10 @@ function DateTimePicker({ value, onChange, onClose, timezone = 'UTC' }) {
       const [hours, minutes] = selectedTime.split(':');
       const [year, month, day] = selectedDate.split('-').map(Number);
       
-      // Create the datetime in the specified timezone
-      const timezoneDate = new Date(year, month - 1, day, parseInt(hours), parseInt(minutes));
+      // Create a local Date object
+      const localDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
       
-      // Convert to UTC by creating a date string in the timezone and parsing it
-      const timezoneString = timezoneDate.toLocaleString('en-US', { 
-        timeZone: timezone,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-      });
-      
-      // Parse the timezone string back to a Date object (which will be in local time)
-      const localDate = new Date(timezoneString);
-      
-      // Convert to UTC ISO string
-      const utcString = localDate.toISOString();
-      onChange(utcString);
+      onChange(localDate);
     }
     onClose();
   };

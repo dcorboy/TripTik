@@ -1,6 +1,7 @@
 /**
  * Helper functions for date and time formatting
  */
+import { utcToLocal } from '../config/timezone.js';
 
 /**
  * Format date as "Tuesday, March 25th"
@@ -11,18 +12,19 @@
 export function formatFullDate(dateTimeString, timezone) {
   if (!dateTimeString) return '';
   
-  const date = new Date(dateTimeString);
+  const localDate = utcToLocal(timezone, dateTimeString);
+  if (!localDate) return '';
+  
   const options = {
     weekday: 'long',
     month: 'long',
-    day: 'numeric',
-    timeZone: timezone
+    day: 'numeric'
   };
   
-  const formatted = date.toLocaleDateString('en-US', options);
+  const formatted = localDate.toLocaleDateString('en-US', options);
   
   // Add ordinal suffix (1st, 2nd, 3rd, etc.)
-  const day = date.getDate();
+  const day = localDate.getDate();
   const suffix = getOrdinalSuffix(day);
   
   return formatted.replace(/\d+$/, day + suffix);
@@ -37,15 +39,16 @@ export function formatFullDate(dateTimeString, timezone) {
 export function formatShortDate(dateTimeString, timezone) {
   if (!dateTimeString) return '';
   
-  const date = new Date(dateTimeString);
+  const localDate = utcToLocal(timezone, dateTimeString);
+  if (!localDate) return '';
+  
   const options = {
     weekday: 'short',
     month: 'short',
-    day: 'numeric',
-    timeZone: timezone
+    day: 'numeric'
   };
   
-  return date.toLocaleDateString('en-US', options);
+  return localDate.toLocaleDateString('en-US', options);
 }
 
 /**
@@ -57,12 +60,13 @@ export function formatShortDate(dateTimeString, timezone) {
 export function formatCompactDate(dateTimeString, timezone) {
   if (!dateTimeString) return '';
   
-  const date = new Date(dateTimeString);
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  const weekday = date.toLocaleDateString('en-US', {
-    weekday: 'short',
-    timeZone: timezone
+  const localDate = utcToLocal(timezone, dateTimeString);
+  if (!localDate) return '';
+  
+  const month = localDate.getMonth() + 1;
+  const day = localDate.getDate();
+  const weekday = localDate.toLocaleDateString('en-US', {
+    weekday: 'short'
   });
   
   return `${month}/${day} ${weekday}`;
@@ -77,12 +81,13 @@ export function formatCompactDate(dateTimeString, timezone) {
 export function formatTimeWithZone(dateTimeString, timezone) {
   if (!dateTimeString) return '';
   
-  const date = new Date(dateTimeString);
-  const time = date.toLocaleTimeString('en-US', {
+  const localDate = utcToLocal(timezone, dateTimeString);
+  if (!localDate) return '';
+  
+  const time = localDate.toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
-    hour12: true,
-    timeZone: timezone
+    hour12: true
   });
   
   // Get timezone abbreviation

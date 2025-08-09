@@ -72,10 +72,10 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
     return new Date(dateString).toISOString();
   };
 
-  const parseDateFromPicker = (dateString) => {
-    if (!dateString) return null;
-    // DateTimePicker already returns ISO string, so just return it
-    return dateString;
+  const parseDateFromPicker = (dateValue) => {
+    if (!dateValue) return null;
+    // DateTimePicker now returns a Date object, convert to ISO string
+    return dateValue instanceof Date ? dateValue.toISOString() : dateValue;
   };
 
   const updateAnalysis = (currentLegs) => {

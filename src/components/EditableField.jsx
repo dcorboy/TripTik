@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'preact/hooks';
 import DateTimePicker from './DateTimePicker.jsx';
+import { utcToLocal, localToUTC } from '../config/timezone.js';
 
 function EditableField({ 
   value, 
@@ -75,6 +76,25 @@ function EditableField({
     }
   };
 
+  // Convert UTC value to local for DateTimePicker
+  const getLocalValueForPicker = () => {
+    if (type === 'datetime-local' && timezone && value) {
+      return utcToLocal(timezone, value);
+    }
+    return value;
+  };
+
+  // Convert local value from DateTimePicker to UTC
+  const handleDateTimeChange = (localDate) => {
+    if (timezone) {
+      const utcValue = localToUTC(timezone, localDate);
+      onSave(utcValue);
+    } else {
+      onSave(localDate);
+    }
+    setShowDatePicker(false);
+  };
+
   if (isEditing) {
     return (
       <input
@@ -102,14 +122,9 @@ function EditableField({
       
       {showDatePicker && (
         <DateTimePicker
-          value={value}
-          onChange={(newValue) => {
-            const parsedValue = parseValue(newValue);
-            onSave(parsedValue);
-            setShowDatePicker(false);
-          }}
+          value={getLocalValueForPicker()}
+          onChange={handleDateTimeChange}
           onClose={() => setShowDatePicker(false)}
-          timezone={timezone}
         />
       )}
     </>
