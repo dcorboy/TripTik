@@ -40,10 +40,40 @@ class DemoFlightParser extends BaseLegParser {
   }
 }
 
+class GmailParser extends BaseLegParser {
+  parse(text, { currentTimezone, tripId }) {
+    const nowIso = new Date().toISOString();
+    const firstLine = String(text).split(/\r?\n/)[0]?.trim() || '';
+    // Capture the carrier code and number that follow the en dash
+    const match = firstLine.match(/–\s+([A-Za-z]{2,4}\s+\d{1,5})\s*$/);
+    const carrier = match ? match[1].trim() : '';
+    return {
+      name: 'Gmail-Parsed',
+      departure_datetime: nowIso,
+      departure_location: '',
+      departure_timezone: currentTimezone,
+      arrival_datetime: nowIso,
+      arrival_location: '',
+      arrival_timezone: currentTimezone,
+      carrier,
+      confirmation: text,
+      description: 'Gmail parsed',
+      trip_id: tripId,
+    };
+  }
+}
+
 function classifyTextAndGetParser(text) {
   if (typeof text !== 'string') return new BaseLegParser();
   const trimmed = text.trim();
   if (trimmed.length === 0) return new BaseLegParser();
+
+  // Gmail format: first line ends with "– <AA> <123>"
+  const firstLine = trimmed.split(/\r?\n/)[0]?.trim() || '';
+  console.log(`testing for ${firstLine}`);
+  if (/–\s+[A-Za-z]{2,4}\s+\d{1,5}$/.test(firstLine)) {
+    return new GmailParser();
+  }
 
   // Demo classifier: first non-whitespace token is "Flight" (case-insensitive)
   const firstTokenMatch = trimmed.match(/^([^\s]+)/);
