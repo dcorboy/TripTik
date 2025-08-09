@@ -273,6 +273,16 @@ body {
     font-weight: 500;
 }
 
+.leg-conf {
+    background: #e8f5e5;
+    color: #35a21f;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-left: 6px;
+ }
+
 .leg-details {
     display: grid;
     grid-template-columns: 1fr 1fr;

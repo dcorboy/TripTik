@@ -117,6 +117,7 @@ class GmailParser extends BaseLegParser {
         const parsed = parseGmailDateTime(candidate);
         if (parsed) arrivalISO = parsed;
       } else if (/^Confirmation number\b/i.test(line) && i + 1 < lines.length) {
+        console.log(`confirmation number: ${lines[i + 1]}`);
         confirmationValue = normalizeSpaces(lines[i + 1]);
       }
     }
