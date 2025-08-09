@@ -4,6 +4,7 @@ import { analyzeTrip } from '../utils/tripAnalyzer.js';
 import { formatInTimezone, formatTimeInTimezone, formatDateInTimezone, setUserTimezone, getUserTimezone } from '../config/timezone.js';
 import { getTimezoneForLocation } from '../utils/locationTimezone.js';
 import TimezonePicker from './TimezonePicker.jsx';
+import { parseLegFromText } from '../utils/legTextInterpreter.js';
 
 function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
   const [legs, setLegs] = useState([]);
@@ -13,6 +14,7 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
   const [analysisResult, setAnalysisResult] = useState('');
   const [currentTimezone, setCurrentTimezone] = useState(getUserTimezone());
   const [currentTrip, setCurrentTrip] = useState(trip);
+  const [pastedLegText, setPastedLegText] = useState('');
 
   useEffect(() => {
     fetchLegs();
@@ -219,6 +221,45 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
     }
   };
 
+  const handlePastedLegTextChange = async (event) => {
+    const text = event.target.value;
+    setPastedLegText(text);
+    if (!text || text.trim().length === 0) return;
+
+    try {
+      const inferredLeg = parseLegFromText(text, currentTimezone, trip.id);
+      const response = await fetch(`${apiBase}/legs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(inferredLeg),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create leg from pasted text');
+      }
+
+      const createdLeg = await response.json();
+
+      setLegs((prevLegs) => {
+        const updatedLegs = [...prevLegs, createdLeg];
+        const sortedLegs = updatedLegs.sort((a, b) => {
+          const dateA = new Date(a.departure_datetime);
+          const dateB = new Date(b.departure_datetime);
+          return dateA - dateB;
+        });
+        updateAnalysis(sortedLegs);
+        if (onLegsChange) onLegsChange();
+        return sortedLegs;
+      });
+      // Clear the input after successful creation to prevent duplicate submissions
+      setPastedLegText('');
+    } catch (err) {
+      console.error('Error creating leg from pasted text:', err);
+    }
+  };
+
   const handleAddLeg = async () => {
     try {
       const newLeg = {
@@ -324,6 +365,14 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
               >
                 + Add Leg
               </button>
+              <input
+                type="text"
+                className="pasted-leg-input"
+                placeholder="Paste Leg Info"
+                value={pastedLegText}
+                onInput={handlePastedLegTextChange}
+                style={{ marginLeft: '10px', flex: '1 1 auto' }}
+              />
             </div>
           </div>
           <div className="result">
@@ -424,6 +473,14 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
               >
                 + Add Leg
               </button>
+              <input
+                type="text"
+                className="pasted-leg-input"
+                placeholder="Paste Leg Info"
+                value={pastedLegText}
+                onInput={handlePastedLegTextChange}
+                style={{ marginLeft: '10px', flex: '1 1 auto' }}
+              />
             </div>
           </div>
           
