@@ -49,8 +49,10 @@ class GmailParser extends BaseLegParser {
     const timezoneContext = currentTimezone;
 
     // Capture the carrier code and number that follow the en dash on the first line
-    const carrierMatch = firstLine.match(/–\s+([A-Za-z]{2,4}\s+\d{1,5})/);
+    const carrierMatch = firstLine.match(/[–—]\s+([A-Za-z]{2,4}\s+\d{1,5})/);
     const carrier = carrierMatch ? carrierMatch[1].trim() : '';
+    // Name is everything before the dash
+    const headerName = (firstLine.split(/[–—]/)[0] || '').trim();
 
     // Helpers local to this function
     const monthLookup = {
@@ -120,7 +122,7 @@ class GmailParser extends BaseLegParser {
     }
 
     return {
-      name: 'Gmail-Parsed',
+      name: headerName || 'Gmail-Parsed',
       departure_datetime: departureISO,
       departure_location: '',
       departure_timezone: timezoneContext,
