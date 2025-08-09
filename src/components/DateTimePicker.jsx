@@ -11,6 +11,8 @@ function DateTimePicker({ value, onChange, onClose }) {
     if (value) {
       // value should already be a local Date object
       const localDate = value instanceof Date ? value : new Date(value);
+      // Debug: log what DateTimePicker received
+      
       
       // Extract date and time components
       const year = localDate.getFullYear();
@@ -94,6 +96,7 @@ function DateTimePicker({ value, onChange, onClose }) {
       
       // Create a local Date object
       const localDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
+      
       
       onChange(localDate);
     }

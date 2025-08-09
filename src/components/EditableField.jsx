@@ -79,7 +79,8 @@ function EditableField({
   // Convert UTC value to local for DateTimePicker
   const getLocalValueForPicker = () => {
     if (type === 'datetime-local' && timezone && value) {
-      return utcToLocal(timezone, value);
+      const local = utcToLocal(timezone, value);
+      return local;
     }
     return value;
   };
