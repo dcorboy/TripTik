@@ -5,6 +5,7 @@
     --bodyBGcolor: #f5f5f5;
     --headerBGcolor: white;
     --actionBGcolor: #28a745;
+    --buttonBGcolor: #6c757d;
     --deleteBGcolor: #c3c3c3;
     --resultBGcolor: #f4f4f4;
     --resultTextColor: black;
@@ -319,7 +320,7 @@ body {
 }
 
 .back-button {
-    background: #6c757d;
+    background: var(--buttonBGcolor);
     color: white;
     border: none;
     padding: 8px 16px;
@@ -500,7 +501,7 @@ body {
 
 .pasted-leg-input {
     color: white; /* color for entered text */
-    background: #666666;
+    background: var(--buttonBGcolor);
     text-align: center;
     font-size: 12px;
     padding: 9px;
