@@ -6,6 +6,8 @@
     --headerBGcolor: white;
     --actionBGcolor: #28a745;
     --deleteBGcolor: #c3c3c3;
+    --resultBGcolor: #f4f4f4;
+    --resultTextColor: black;
     --titleFont: 1.2em Arial, sans-serif;
     --subtitleFont: 1.5em Arial, sans-serif;
 }
@@ -416,7 +418,7 @@ body {
 .result {
     flex: 1;
     width: 50%;
-    background: #f8f9fa;
+    background: white;
     border-radius: 8px;
     padding: 20px;
     border: 1px solid #e9ecef;
@@ -424,7 +426,9 @@ body {
 
 .result-content {
     min-height: 200px;
-    color: #666;
+    color: var(--resultTextColor);
+    background: var(--resultBGcolor);
+    padding: .5rem;
     font-style: italic;
 }
 
@@ -434,7 +438,6 @@ body {
     font-family: 'Courier New', monospace;
     font-size: 14px;
     line-height: 1.4;
-    color: #333;
 }
 
 /* Leg header layout */
@@ -493,6 +496,20 @@ body {
 
 .add-leg-btn:active {
     background: #1e7e34;
+}
+
+.pasted-leg-input {
+    color: white; /* color for entered text */
+    background: #666666;
+    text-align: center;
+    font-size: 12px;
+    padding: 9px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.pasted-leg-input::placeholder {
+    color: white; /* color for placeholder text */
 }
 
 /* DateTime Picker Styles */

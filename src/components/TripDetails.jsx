@@ -365,7 +365,7 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
               <input
                 type="text"
                 className="pasted-leg-input"
-                placeholder="Paste Leg Info"
+                placeholder="or Paste Here"
                 value={pastedLegText}
                 onInput={(e) => setPastedLegText(e.target.value)}
                 onPaste={handlePastedLegTextPaste}
@@ -480,7 +480,7 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
               <input
                 type="text"
                 className="pasted-leg-input"
-                placeholder="Paste Leg Info"
+                placeholder="or Paste Here"
                 value={pastedLegText}
                 onInput={(e) => setPastedLegText(e.target.value)}
                 onPaste={handlePastedLegTextPaste}
