@@ -62,8 +62,10 @@ class GmailParser extends BaseLegParser {
     const normalizeSpaces = (s) => s.replace(/[\u00A0\u202F]/g, ' ').replace(/\s+/g, ' ').trim();
     const parseGmailDateTime = (raw) => {
       const s = normalizeSpaces(raw);
-      // Ex: "Jul 29, 8:15 AM"
-      const m = s.match(/^([A-Za-z]{3})\s+(\d{1,2}),\s*(\d{1,2}):(\d{2})\s*([AP])M$/i);
+      console.log(`s: ${s}`);
+      // Ex: "Jul 29, 8:15 AM" or "Wed, Aug 6, 9:25 PM"
+      const m = s.match(/^(?:[A-Za-z]{3},\s*)?([A-Za-z]{3})\s+(\d{1,2}),\s*(\d{1,2}):(\d{2})\s*([AP])M$/i);
+      console.log(`m: ${m}`);
       if (!m) return null;
       const [, monAbbrev, dayStr, hourStr, minuteStr, ampm] = m;
       const monthIndex = monthLookup[monAbbrev];
@@ -75,6 +77,7 @@ class GmailParser extends BaseLegParser {
       if (isPM && hour < 12) hour += 12;
       if (!isPM && hour === 12) hour = 0;
       const wallClockDate = new Date(year, monthIndex, parseInt(dayStr, 10), hour, minute, 0, 0);
+      console.log(`wallClockDate: ${wallClockDate}`);
       // Convert wall-clock in timezoneContext to UTC ISO
       // Inline conversion equivalent to localToUTC to avoid external changes
       const y = wallClockDate.getFullYear();
@@ -88,6 +91,7 @@ class GmailParser extends BaseLegParser {
         year: 'numeric', month: '2-digit', day: '2-digit',
         hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
       });
+      console.log(`dtf: ${dtf}`);
       const parts = dtf.formatToParts(new Date(naiveUtcMs));
       const get = (type) => parts.find(p => p.type === type)?.value;
       const tzY = Number(get('year'));
@@ -111,10 +115,12 @@ class GmailParser extends BaseLegParser {
       if (/^Take-off\b/i.test(line) && i + 1 < lines.length) {
         const candidate = lines[i + 1];
         const parsed = parseGmailDateTime(candidate);
+        console.log(`Take Off: ${parsed}`);
         if (parsed) departureISO = parsed;
       } else if (/^Landing\b/i.test(line) && i + 1 < lines.length) {
         const candidate = lines[i + 1];
         const parsed = parseGmailDateTime(candidate);
+        console.log(`Landing: ${parsed}`);
         if (parsed) arrivalISO = parsed;
       } else if (/^Confirmation number\b/i.test(line) && i + 1 < lines.length) {
         console.log(`confirmation number: ${lines[i + 1]}`);
