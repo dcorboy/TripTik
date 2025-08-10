@@ -273,7 +273,7 @@ class UnitedEmailParser extends BaseLegParser {
 
 // UnitedWebParser
 // Supports
-//   NO Leg Description
+//   INFERRED Leg Description
 //   Departure Date
 //   Departure Time
 //   Arrival Date
@@ -375,7 +375,7 @@ class UnitedWebParser extends BaseLegParser {
 
     // Find departure location (next non-empty line after departure time)
     const depLocDescLine = idxDepart >= 0 && idxDepart + 4 < lines.length ? lines[idxDepart + 4] : '';
-    const depLocDesc = depLocDescLine;
+    const depLocDesc = depLocDescLine.split(',')[0] || '';
 
     // Find arrival date (first line after "Arrive")
     const idxArrive = lines.findIndex(l => /^Arrive\b/i.test(l));
@@ -401,7 +401,7 @@ class UnitedWebParser extends BaseLegParser {
 
     // Find departure location (next non-empty line after departure time)
     const arrLocDescLine = idxArrive >= 0 && idxArrive + 4 < lines.length ? lines[idxArrive + 4] : '';
-    const arrLocDesc = arrLocDescLine;
+    const arrLocDesc = arrLocDescLine.split(',')[0] || '';
 
     // Find carrier (line starting with "Flight" but not "Flight Info")
     const idxFlight = lines.findIndex(l => /^Flight\b/i.test(l) && !/^Flight Info\b/i.test(l));
