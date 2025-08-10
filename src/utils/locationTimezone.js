@@ -184,6 +184,7 @@ const AIRPORT_TIMEZONES = {
   'GYE': 'America/Guayaquil',    // Guayaquil
   'ASU': 'America/Asuncion',     // Asunción
   'MVD': 'America/Montevideo',   // Montevideo
+  'LIR': 'America/Costa_Rica',  // Liberia, Costa Rica
 };
 
 /**

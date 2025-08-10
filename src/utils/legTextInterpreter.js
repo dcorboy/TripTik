@@ -1,6 +1,8 @@
 // Utility to classify pasted leg text and parse it into a leg object.
 // Designed for easy extension: add new parser classes and update classifyTextAndGetParser.
 
+import { getTimezoneForLocation } from './locationTimezone.js';
+
 class BaseLegParser {
   parse(text, { currentTimezone, tripId }) {
     const nowIso = new Date().toISOString();
@@ -173,8 +175,8 @@ class UnitedEmailParser extends BaseLegParser {
     const nameLine = idxName >= 0 ? lines[idxName] : '';
 
     // Timezone contexts initialized to currentTimezone
-    const departureTimezoneContext = currentTimezone;
-    const arrivalTimezoneContext = currentTimezone;
+    let departureTimezoneContext = currentTimezone;
+    let arrivalTimezoneContext = currentTimezone;
 
     // Parse date line (immediately after name line): "Jul 29, 2025"
     const dateLine = idxName >= 0 && idxName + 1 < lines.length ? lines[idxName + 1] : '';
@@ -285,8 +287,8 @@ class UnitedWebParser extends BaseLegParser {
     const lines = String(text).split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
     
     // Timezone contexts initialized to currentTimezone
-    const departureTimezoneContext = currentTimezone;
-    const arrivalTimezoneContext = currentTimezone;
+    let departureTimezoneContext = currentTimezone;
+    let arrivalTimezoneContext = currentTimezone;
 
     // Helper: parse hh:mm AM/PM to 24h
     const parseTime = (t) => {
@@ -362,6 +364,15 @@ class UnitedWebParser extends BaseLegParser {
     const depLocLine = idxDepart >= 0 && idxDepart + 3 < lines.length ? lines[idxDepart + 3] : '';
     const depLoc = extractAirportCode(depLocLine);
 
+    // Update departure timezone context based on departure location
+    if (depLoc) {
+      const depTimezone = getTimezoneForLocation(depLoc);
+      if (depTimezone) {
+        departureTimezoneContext = depTimezone;
+        console.log(`departureTimezoneContext: ${departureTimezoneContext}`);
+      }
+    }
+
     // Find arrival date (first line after "Arrive")
     const idxArrive = lines.findIndex(l => /^Arrive\b/i.test(l));
     const arrDateLine = idxArrive >= 0 && idxArrive + 1 < lines.length ? lines[idxArrive + 1] : '';
@@ -374,6 +385,15 @@ class UnitedWebParser extends BaseLegParser {
     // Find arrival location (next non-empty line after arrival time)
     const arrLocLine = idxArrive >= 0 && idxArrive + 3 < lines.length ? lines[idxArrive + 3] : '';
     const arrLoc = extractAirportCode(arrLocLine);
+
+    // Update arrival timezone context based on arrival location
+    if (arrLoc) {
+      const arrTimezone = getTimezoneForLocation(arrLoc);
+      if (arrTimezone) {
+        arrivalTimezoneContext = arrTimezone;
+        console.log(`arrivalTimezoneContext: ${arrivalTimezoneContext}`);
+      }
+    }
 
     // Find carrier (line starting with "Flight" but not "Flight Info")
     const idxFlight = lines.findIndex(l => /^Flight\b/i.test(l) && !/^Flight Info\b/i.test(l));

@@ -13,7 +13,8 @@ const TIMEZONE_OPTIONS = [
   { value: 'Asia/Tokyo', label: 'Tokyo (JST)' },
   { value: 'Asia/Shanghai', label: 'Shanghai (CST)' },
   { value: 'Australia/Sydney', label: 'Sydney (AEST/AEDT)' },
-  { value: 'Pacific/Auckland', label: 'Auckland (NZST/NZDT)' }
+  { value: 'Pacific/Auckland', label: 'Auckland (NZST/NZDT)' },
+  { value: 'America/Costa_Rica', label: 'Costa Rica (CST/CDT)' }
 ];
 
 function TimezonePicker({ value, onChange, onClose }) {
