@@ -373,6 +373,10 @@ class UnitedWebParser extends BaseLegParser {
       }
     }
 
+    // Find departure location (next non-empty line after departure time)
+    const depLocDescLine = idxDepart >= 0 && idxDepart + 4 < lines.length ? lines[idxDepart + 4] : '';
+    const depLocDesc = depLocDescLine;
+
     // Find arrival date (first line after "Arrive")
     const idxArrive = lines.findIndex(l => /^Arrive\b/i.test(l));
     const arrDateLine = idxArrive >= 0 && idxArrive + 1 < lines.length ? lines[idxArrive + 1] : '';
@@ -395,6 +399,10 @@ class UnitedWebParser extends BaseLegParser {
       }
     }
 
+    // Find departure location (next non-empty line after departure time)
+    const arrLocDescLine = idxArrive >= 0 && idxArrive + 4 < lines.length ? lines[idxArrive + 4] : '';
+    const arrLocDesc = arrLocDescLine;
+
     // Find carrier (line starting with "Flight" but not "Flight Info")
     const idxFlight = lines.findIndex(l => /^Flight\b/i.test(l) && !/^Flight Info\b/i.test(l));
     const carrier = idxFlight >= 0 ? lines[idxFlight].replace(/^Flight\s+/i, '').trim() : '';
@@ -411,7 +419,7 @@ class UnitedWebParser extends BaseLegParser {
     }
 
     return {
-      name: 'United-Web-Parsed',
+      name: depLocDesc + ' to ' + arrLocDesc,
       departure_datetime: departureISO,
       departure_location: depLoc,
       departure_timezone: departureTimezoneContext,
