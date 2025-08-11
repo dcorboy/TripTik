@@ -1,7 +1,7 @@
 // Utility to classify pasted leg text and parse it into a leg object.
 // Designed for easy extension: add new parser classes and update classifyTextAndGetParser.
 
-import { getTimezoneForLocation } from './locationTimezone.js';
+import { getTimezoneForLocation, getAirportForCity } from './locationTimezone.js';
 import { 
   toIsoInZone, 
   parseTime, 
@@ -89,6 +89,33 @@ class GmailParser extends BaseLegParser {
     const carrier = carrierMatch ? carrierMatch[1].trim() : '';
     // Name is everything before the dash
     const headerName = (firstLine.split(/[–—]/)[0] || '').trim();
+    
+    // Extract departure and arrival cities from header name (e.g., "Washington to Orlando")
+    let departureCity = '';
+    let arrivalCity = '';
+    if (headerName.includes(' to ')) {
+      const cityParts = headerName.split(' to ');
+      departureCity = cityParts[0]?.trim() || '';
+      arrivalCity = cityParts[1]?.trim() || '';
+      
+      // Look up airport codes for the cities
+      const depAirport = getAirportForCity(departureCity);
+      const arrAirport = getAirportForCity(arrivalCity);
+      
+      // Update timezone contexts based on airport codes
+      if (depAirport) {
+        const depTimezone = getTimezoneForLocation(depAirport);
+        if (depTimezone) {
+          departureTimezoneContext = depTimezone;
+        }
+      }
+      if (arrAirport) {
+        const arrTimezone = getTimezoneForLocation(arrAirport);
+        if (arrTimezone) {
+          arrivalTimezoneContext = arrTimezone;
+        }
+      }
+    }
 
     const parseGmailDateTime = (raw) => {
       const s = normalizeSpaces(raw);
@@ -134,13 +161,17 @@ class GmailParser extends BaseLegParser {
       }
     }
 
+    // Get airport codes for the cities
+    const depAirport = getAirportForCity(departureCity);
+    const arrAirport = getAirportForCity(arrivalCity);
+    
     return {
       name: headerName || 'Gmail-Parsed',
       departure_datetime: departureISO,
-      departure_location: '',
+      departure_location: depAirport || '',
       departure_timezone: departureTimezoneContext,
       arrival_datetime: arrivalISO,
-      arrival_location: '',
+      arrival_location: arrAirport || '',
       arrival_timezone: arrivalTimezoneContext,
       carrier,
       confirmation: confirmationValue,
