@@ -6,14 +6,19 @@ import { getTimezoneForLocation } from './locationTimezone.js';
 class BaseLegParser {
   parse(text, { currentTimezone, tripId }) {
     const nowIso = new Date().toISOString();
+    
+    // Timezone contexts initialized to currentTimezone
+    let departureTimezoneContext = currentTimezone;
+    let arrivalTimezoneContext = currentTimezone;
+    
     return {
       name: 'Unknown Leg',
       departure_datetime: nowIso,
       departure_location: '',
-      departure_timezone: currentTimezone,
+      departure_timezone: departureTimezoneContext,
       arrival_datetime: nowIso,
       arrival_location: '',
-      arrival_timezone: currentTimezone,
+      arrival_timezone: arrivalTimezoneContext,
       carrier: '',
       confirmation: null,
       trip_id: tripId,
@@ -27,14 +32,19 @@ class DemoFlightParser extends BaseLegParser {
     // Expect format like: "Flight <Carrier> ..."
     const tokens = String(text).trim().split(/\s+/);
     const carrier = tokens.length >= 2 ? tokens[1] : '';
+    
+    // Timezone contexts initialized to currentTimezone
+    let departureTimezoneContext = currentTimezone;
+    let arrivalTimezoneContext = currentTimezone;
+    
     return {
       name: 'Demo-Parsed',
       departure_datetime: nowIso,
       departure_location: '',
-      departure_timezone: currentTimezone,
+      departure_timezone: departureTimezoneContext,
       arrival_datetime: nowIso,
       arrival_location: '',
-      arrival_timezone: currentTimezone,
+      arrival_timezone: arrivalTimezoneContext,
       carrier,
       confirmation: text,
       trip_id: tripId,
@@ -59,8 +69,10 @@ class GmailParser extends BaseLegParser {
     const nowIso = new Date().toISOString();
     const lines = String(text).split(/\r?\n/).map(l => l.trim());
     const firstLine = lines[0] || '';
-    // Timezone context: initialize from the user's timezone if available via caller; use currentTimezone as given
-    const timezoneContext = currentTimezone;
+    
+    // Timezone contexts initialized to currentTimezone
+    let departureTimezoneContext = currentTimezone;
+    let arrivalTimezoneContext = currentTimezone;
 
     // Capture the carrier code and number that follow the en dash on the first line
     const carrierMatch = firstLine.match(/[–—]\s+([A-Za-z]{2,4}\s+\d{1,5})/);
@@ -74,6 +86,28 @@ class GmailParser extends BaseLegParser {
       Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
     };
     const normalizeSpaces = (s) => s.replace(/[\u00A0\u202F]/g, ' ').replace(/\s+/g, ' ').trim();
+    // Helper: convert wall-clock to UTC ISO using given timezone context
+    const toIsoInZone = (zone, year, monthIndex, day, hour, minute) => {
+      const naiveUtcMs = Date.UTC(year, monthIndex, day, hour, minute, 0, 0);
+      const dtf = new Intl.DateTimeFormat('en-US', {
+        timeZone: zone,
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+      });
+      const parts = dtf.formatToParts(new Date(naiveUtcMs));
+      const get = (type) => parts.find(p => p.type === type)?.value;
+      const tzY = Number(get('year'));
+      const tzM = Number(get('month'));
+      const tzD = Number(get('day'));
+      const tzH = Number(get('hour'));
+      const tzMin = Number(get('minute'));
+      const tzS = Number(get('second'));
+      const constructedMs = Date.UTC(tzY, tzM - 1, tzD, tzH, tzMin, tzS, 0);
+      const offsetMinutes = Math.round((constructedMs - naiveUtcMs) / 60000);
+      const trueUtcMs = naiveUtcMs - offsetMinutes * 60000;
+      return new Date(trueUtcMs).toISOString();
+    };
+
     const parseGmailDateTime = (raw) => {
       const s = normalizeSpaces(raw);
       console.log(`s: ${s}`);
@@ -90,34 +124,10 @@ class GmailParser extends BaseLegParser {
       const isPM = ampm.toUpperCase() === 'P';
       if (isPM && hour < 12) hour += 12;
       if (!isPM && hour === 12) hour = 0;
-      const wallClockDate = new Date(year, monthIndex, parseInt(dayStr, 10), hour, minute, 0, 0);
-      console.log(`wallClockDate: ${wallClockDate}`);
-      // Convert wall-clock in timezoneContext to UTC ISO
-      // Inline conversion equivalent to localToUTC to avoid external changes
-      const y = wallClockDate.getFullYear();
-      const mi = wallClockDate.getMonth();
-      const d = wallClockDate.getDate();
-      const H = wallClockDate.getHours();
-      const M = wallClockDate.getMinutes();
-      const naiveUtcMs = Date.UTC(y, mi, d, H, M, 0, 0);
-      const dtf = new Intl.DateTimeFormat('en-US', {
-        timeZone: timezoneContext,
-        year: 'numeric', month: '2-digit', day: '2-digit',
-        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-      });
-      console.log(`dtf: ${dtf}`);
-      const parts = dtf.formatToParts(new Date(naiveUtcMs));
-      const get = (type) => parts.find(p => p.type === type)?.value;
-      const tzY = Number(get('year'));
-      const tzM = Number(get('month'));
-      const tzD = Number(get('day'));
-      const tzH = Number(get('hour'));
-      const tzMin = Number(get('minute'));
-      const tzS = Number(get('second'));
-      const constructedMs = Date.UTC(tzY, tzM - 1, tzD, tzH, tzMin, tzS, 0);
-      const offsetMinutes = Math.round((constructedMs - naiveUtcMs) / 60000);
-      const trueUtcMs = naiveUtcMs - offsetMinutes * 60000;
-      return new Date(trueUtcMs).toISOString();
+      
+      // Use departure timezone context for take-off, arrival timezone context for landing
+      const timezoneContext = raw.includes('Take-off') ? departureTimezoneContext : arrivalTimezoneContext;
+      return toIsoInZone(timezoneContext, year, monthIndex, parseInt(dayStr, 10), hour, minute);
     };
 
     let departureISO = nowIso;
@@ -146,10 +156,10 @@ class GmailParser extends BaseLegParser {
       name: headerName || 'Gmail-Parsed',
       departure_datetime: departureISO,
       departure_location: '',
-      departure_timezone: timezoneContext,
+      departure_timezone: departureTimezoneContext,
       arrival_datetime: arrivalISO,
       arrival_location: '',
-      arrival_timezone: timezoneContext,
+      arrival_timezone: arrivalTimezoneContext,
       carrier,
       confirmation: confirmationValue,
       description: 'Gmail parsed',
