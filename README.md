@@ -6,7 +6,10 @@ A full-stack application for managing trips and their associated legs (flights, 
 
 - View list of trips
 - View trip details with legs displayed in chronological order
-- Clean, modern UI
+- Add, edit, and delete trips and legs
+- Advanced date/time handling with timezone support
+- Editable fields with real-time updates
+- Clean, modern UI with responsive design
 - RESTful API backend
 
 ## Getting Started
@@ -42,15 +45,21 @@ A full-stack application for managing trips and their associated legs (flights, 
 
 ### API Endpoints
 
-- `GET /api/trips` - Get all trips
-- `GET /api/trips/:id` - Get specific trip
-- `GET /api/trips/:id/legs` - Get legs for a specific trip
-- `POST /api/trips` - Create a new trip
-- `PUT /api/trips/:id` - Update a trip
-- `DELETE /api/trips/:id` - Delete a trip
-- `POST /api/legs` - Create a new leg
-- `PUT /api/legs/:id` - Update a leg
-- `DELETE /api/legs/:id` - Delete a leg
+- `GET /users/:id/trips` - Get all trips for a user
+- `GET /trips/:id` - Get specific trip
+- `POST /trips` - Create a new trip
+- `PUT /trips/:id` - Update a trip
+- `DELETE /trips/:id` - Delete a trip
+- `GET /legs` - Get all legs
+- `GET /legs/:id` - Get specific leg
+- `POST /legs` - Create a new leg
+- `PUT /legs/:id` - Update a leg
+- `DELETE /legs/:id` - Delete a leg
+- `GET /users` - Get all users
+- `GET /users/:id` - Get specific user
+- `POST /users` - Create a new user
+- `PUT /users/:id` - Update a user
+- `DELETE /users/:id` - Delete a user
 
 ## Project Structure
 
@@ -58,7 +67,17 @@ A full-stack application for managing trips and their associated legs (flights, 
 ├── src/
 │   ├── components/
 │   │   ├── TripList.jsx
-│   │   └── TripDetails.jsx
+│   │   ├── TripDetails.jsx
+│   │   ├── DateTimePicker.jsx
+│   │   ├── TimezonePicker.jsx
+│   │   └── EditableField.jsx
+│   ├── config/
+│   │   └── timezone.js
+│   ├── utils/
+│   │   ├── dateFormatters.js
+│   │   ├── legTextInterpreter.js
+│   │   ├── locationTimezone.js
+│   │   └── tripAnalyzer.js
 │   ├── App.jsx
 │   └── main.jsx
 ├── routes/
@@ -66,10 +85,12 @@ A full-stack application for managing trips and their associated legs (flights, 
 │   ├── legs.js
 │   └── users.js
 ├── public/
+│   └── style.css
 ├── index.html
 ├── index.js
 ├── database.js
-└── package.json
+├── package.json
+└── vite.config.js
 ```
 
 ## Development
@@ -78,12 +99,30 @@ The application uses:
 - **Backend**: Express.js with SQLite database
 - **Frontend**: Preact with Vite for development
 - **Styling**: CSS with modern design principles
+- **Date/Time**: Advanced timezone handling with UTC storage
+
+## Key Components
+
+- **TripList**: Displays all trips with add/delete functionality
+- **TripDetails**: Shows trip details with editable fields and leg management
+- **DateTimePicker**: Timezone-aware date and time selection
+- **TimezonePicker**: Timezone selection component
+- **EditableField**: Inline editing component for trip properties
+
+## Date and Time Handling
+
+The application includes comprehensive date and time handling with timezone awareness. See `DATE_HANDLING.md` for detailed information about:
+- UTC storage format
+- Timezone conversion
+- Chronological ordering
+- Database schema
 
 ## Next Steps
 
 Future enhancements could include:
-- User authentication
-- Add/edit/delete trips and legs
-- Better date/time handling
-- More sophisticated UI components
-- Search and filtering capabilities 
+- User authentication and authorization
+- Search and filtering capabilities
+- Calendar integration
+- Timezone-aware notifications
+- Flight duration and layover calculations
+- Multi-timezone trip support 

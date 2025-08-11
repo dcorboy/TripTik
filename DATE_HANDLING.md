@@ -4,6 +4,51 @@
 
 The application now supports comprehensive date and time handling with timezone awareness, proper UTC storage, and chronological ordering.
 
+## Frontend Components
+
+### DateTimePicker Component
+Located at `src/components/DateTimePicker.jsx`, this component provides:
+- Date and time selection with timezone awareness
+- Integration with the application's timezone system
+- Real-time validation of datetime inputs
+- Consistent formatting for display and storage
+
+### TimezonePicker Component
+Located at `src/components/TimezonePicker.jsx`, this component provides:
+- Timezone selection from a comprehensive list
+- Integration with the `src/config/timezone.js` configuration
+- Automatic timezone detection and conversion
+- User-friendly timezone display
+
+### EditableField Component
+Located at `src/components/EditableField.jsx`, this component provides:
+- Inline editing for trip and leg properties
+- Real-time updates to the database
+- Validation and error handling
+- Consistent user experience across the application
+
+## Utility Functions
+
+### Date Formatters (`src/utils/dateFormatters.js`)
+Provides utility functions for:
+- Formatting dates for display
+- Converting between timezones
+- Validating datetime inputs
+- Generating human-readable date strings
+
+### Location Timezone (`src/utils/locationTimezone.js`)
+Handles timezone mapping for:
+- Airport codes and their associated timezones
+- Automatic timezone detection based on location
+- Timezone conversion for travel itineraries
+
+### Trip Analyzer (`src/utils/tripAnalyzer.js`)
+Provides analysis functions for:
+- Calculating trip durations
+- Determining layover times
+- Chronological ordering of legs
+- Timezone-aware trip planning
+
 ## Database Schema
 
 ### Legs Table
