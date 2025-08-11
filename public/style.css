@@ -263,6 +263,7 @@ body {
 }
 
 .leg-name {
+    font-size: 20px;
     font-weight: 600;
     color: #2c3e50;
 }
@@ -299,10 +300,24 @@ body {
     flex-direction: column;
 }
 
+.leg-location:first-child {
+    margin-left: .5em;
+}
+
+
 .location-label {
     font-weight: 500;
     color: #333;
+    padding: 0 4px;
     margin-bottom: 2px;
+}
+
+.location-value {
+    font-size: 30px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 2px;
+    margin-left: .25em;
 }
 
 .loading {
@@ -363,12 +378,6 @@ body {
     box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
-.location-value {
-    font-weight: 500;
-    color: #333;
-    margin-bottom: 2px;
-}
-
 .datetime-container {
     display: flex;
     flex-direction: column;
@@ -376,7 +385,7 @@ body {
 }
 
 .time-value {
-    font-size: 12px;
+    font-size: 16px;
     color: #1976d2;
     font-weight: 500;
 }
@@ -687,6 +696,24 @@ body {
     .detail-container {
       flex-direction: column;
     }
+
     .legs-container, .result {
         width: auto
     }
+
+    .time-value {
+        font-size: 11px;
+    }
+
+    .location-value {
+        font-size: 25px;
+    }
+
+    .leg-location:first-child {
+        margin-left: .25em;
+    }
+    
+    .leg-item {
+        padding: 15px 10px;
+    }
+}
