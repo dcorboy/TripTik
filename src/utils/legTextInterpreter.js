@@ -2,6 +2,16 @@
 // Designed for easy extension: add new parser classes and update classifyTextAndGetParser.
 
 import { getTimezoneForLocation } from './locationTimezone.js';
+import { 
+  toIsoInZone, 
+  parseTime, 
+  parseDate, 
+  extractAirportCode, 
+  extractAirportCodeFromWeb, 
+  extractCityDesc, 
+  MONTH_LOOKUP, 
+  normalizeSpaces 
+} from './parserUtils.js';
 
 class BaseLegParser {
   parse(text, { currentTimezone, tripId }) {
@@ -80,34 +90,6 @@ class GmailParser extends BaseLegParser {
     // Name is everything before the dash
     const headerName = (firstLine.split(/[–—]/)[0] || '').trim();
 
-    // Helpers local to this function
-    const monthLookup = {
-      Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
-      Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
-    };
-    const normalizeSpaces = (s) => s.replace(/[\u00A0\u202F]/g, ' ').replace(/\s+/g, ' ').trim();
-    // Helper: convert wall-clock to UTC ISO using given timezone context
-    const toIsoInZone = (zone, year, monthIndex, day, hour, minute) => {
-      const naiveUtcMs = Date.UTC(year, monthIndex, day, hour, minute, 0, 0);
-      const dtf = new Intl.DateTimeFormat('en-US', {
-        timeZone: zone,
-        year: 'numeric', month: '2-digit', day: '2-digit',
-        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-      });
-      const parts = dtf.formatToParts(new Date(naiveUtcMs));
-      const get = (type) => parts.find(p => p.type === type)?.value;
-      const tzY = Number(get('year'));
-      const tzM = Number(get('month'));
-      const tzD = Number(get('day'));
-      const tzH = Number(get('hour'));
-      const tzMin = Number(get('minute'));
-      const tzS = Number(get('second'));
-      const constructedMs = Date.UTC(tzY, tzM - 1, tzD, tzH, tzMin, tzS, 0);
-      const offsetMinutes = Math.round((constructedMs - naiveUtcMs) / 60000);
-      const trueUtcMs = naiveUtcMs - offsetMinutes * 60000;
-      return new Date(trueUtcMs).toISOString();
-    };
-
     const parseGmailDateTime = (raw) => {
       const s = normalizeSpaces(raw);
       console.log(`s: ${s}`);
@@ -116,7 +98,7 @@ class GmailParser extends BaseLegParser {
       console.log(`m: ${m}`);
       if (!m) return null;
       const [, monAbbrev, dayStr, hourStr, minuteStr, ampm] = m;
-      const monthIndex = monthLookup[monAbbrev];
+      const monthIndex = MONTH_LOOKUP[monAbbrev];
       if (monthIndex == null) return null;
       const year = new Date().getFullYear();
       let hour = parseInt(hourStr, 10);
@@ -176,8 +158,8 @@ class GmailParser extends BaseLegParser {
 //   Departure Time
 //   INFERRED Arrival Date
 //   Arrival Time
-//   NO Departure Location
-//   NO Arrival Location
+//   Departure Location
+//   Arrival Location
 //   Flight Number
 //   NO Confirmation
 class UnitedEmailParser extends BaseLegParser {
@@ -193,10 +175,9 @@ class UnitedEmailParser extends BaseLegParser {
     // Parse date line (immediately after name line): "Jul 29, 2025"
     const dateLine = idxName >= 0 && idxName + 1 < lines.length ? lines[idxName + 1] : '';
     const dateMatch = dateLine.match(/^([A-Za-z]{3})\s+(\d{1,2}),\s*(\d{4})$/);
-    const monthLookup = { Jan:0, Feb:1, Mar:2, Apr:3, May:4, Jun:5, Jul:6, Aug:7, Sep:8, Oct:9, Nov:10, Dec:11 };
     let baseYear, baseMonthIndex, baseDay;
     if (dateMatch) {
-      baseMonthIndex = monthLookup[dateMatch[1]];
+      baseMonthIndex = MONTH_LOOKUP[dateMatch[1]];
       baseDay = parseInt(dateMatch[2], 10);
       baseYear = parseInt(dateMatch[3], 10);
     } else {
@@ -218,42 +199,8 @@ class UnitedEmailParser extends BaseLegParser {
       }
     }
 
-    // Helper: parse hh:mm AM/PM to 24h
-    const parseTime = (t) => {
-      const mm = String(t || '').trim().match(/^(\d{1,2}):(\d{2})\s*([AP])M$/i);
-      if (!mm) return { hour: 0, minute: 0 };
-      let hour = parseInt(mm[1], 10);
-      const minute = parseInt(mm[2], 10);
-      const isPM = mm[3].toUpperCase() === 'P';
-      if (isPM && hour < 12) hour += 12;
-      if (!isPM && hour === 12) hour = 0;
-      return { hour, minute };
-    };
-
     const { hour: dH, minute: dM } = parseTime(departTimeStr);
     const { hour: aH, minute: aM } = parseTime(arriveTimeStr);
-
-    // Convert wall-clock to UTC ISO using given timezone contexts
-    const toIsoInZone = (zone, year, monthIndex, day, hour, minute) => {
-      const naiveUtcMs = Date.UTC(year, monthIndex, day, hour, minute, 0, 0);
-      const dtf = new Intl.DateTimeFormat('en-US', {
-        timeZone: zone,
-        year: 'numeric', month: '2-digit', day: '2-digit',
-        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-      });
-      const parts = dtf.formatToParts(new Date(naiveUtcMs));
-      const get = (type) => parts.find(p => p.type === type)?.value;
-      const tzY = Number(get('year'));
-      const tzM = Number(get('month'));
-      const tzD = Number(get('day'));
-      const tzH = Number(get('hour'));
-      const tzMin = Number(get('minute'));
-      const tzS = Number(get('second'));
-      const constructedMs = Date.UTC(tzY, tzM - 1, tzD, tzH, tzMin, tzS, 0);
-      const offsetMinutes = Math.round((constructedMs - naiveUtcMs) / 60000);
-      const trueUtcMs = naiveUtcMs - offsetMinutes * 60000;
-      return new Date(trueUtcMs).toISOString();
-    };
 
     const departureISO = toIsoInZone(departureTimezoneContext, baseYear, baseMonthIndex, baseDay, dH, dM);
     const arrivalISO = toIsoInZone(arrivalTimezoneContext, baseYear, baseMonthIndex, baseDay, aH, aM);
@@ -303,66 +250,7 @@ class UnitedWebParser extends BaseLegParser {
     let departureTimezoneContext = currentTimezone;
     let arrivalTimezoneContext = currentTimezone;
 
-    // Helper: parse hh:mm AM/PM to 24h
-    const parseTime = (t) => {
-      const mm = String(t || '').trim().match(/^(\d{1,2}):(\d{2})\s*([AP])M$/i);
-      if (!mm) return { hour: 0, minute: 0 };
-      let hour = parseInt(mm[1], 10);
-      const minute = parseInt(mm[2], 10);
-      const isPM = mm[3].toUpperCase() === 'P';
-      if (isPM && hour < 12) hour += 12;
-      if (!isPM && hour === 12) hour = 0;
-      return { hour, minute };
-    };
 
-    // Helper: parse date like "Tue, Aug 12, 2025"
-    const parseDate = (dateStr) => {
-      const match = dateStr.match(/^[A-Za-z]{3},\s*([A-Za-z]{3})\s+(\d{1,2}),\s*(\d{4})$/);
-      if (!match) return null;
-      const monthLookup = { Jan:0, Feb:1, Mar:2, Apr:3, May:4, Jun:5, Jul:6, Aug:7, Sep:8, Oct:9, Nov:10, Dec:11 };
-      const monthIndex = monthLookup[match[1]];
-      const day = parseInt(match[2], 10);
-      const year = parseInt(match[3], 10);
-      return { year, monthIndex, day };
-    };
-
-    // Helper: extract airport code from "M,C,OMCO" or "M,C,O,DMCOD" format
-    const extractAirportCode = (line) => {
-      const trimmedLine = line.trim();
-      console.log(`extractAirportCode: ${trimmedLine}`);
-      
-      // Match "M,C,OMCO" format (3 letters after the comma)
-      const match = trimmedLine.match(/[A-Za-z],\s*[A-Za-z],\s*[A-Za-z],\s*[A-Za-z]\s*([A-Za-z]{4})/);
-      console.log(`match: ${match}`);
-      if (match) return match[1];
-      
-      // Match "M,C,O,DMCOD" format (4 letters after the comma)
-      const altMatch = trimmedLine.match(/[A-Za-z],\s*[A-Za-z],\s*[A-Za-z]\s*([A-Za-z]{3})/);
-      console.log(`altMatch: ${altMatch}`);
-      return altMatch ? altMatch[1] : '';
-    };
-
-    // Helper: convert wall-clock to UTC ISO using given timezone context
-    const toIsoInZone = (zone, year, monthIndex, day, hour, minute) => {
-      const naiveUtcMs = Date.UTC(year, monthIndex, day, hour, minute, 0, 0);
-      const dtf = new Intl.DateTimeFormat('en-US', {
-        timeZone: zone,
-        year: 'numeric', month: '2-digit', day: '2-digit',
-        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-      });
-      const parts = dtf.formatToParts(new Date(naiveUtcMs));
-      const get = (type) => parts.find(p => p.type === type)?.value;
-      const tzY = Number(get('year'));
-      const tzM = Number(get('month'));
-      const tzD = Number(get('day'));
-      const tzH = Number(get('hour'));
-      const tzMin = Number(get('minute'));
-      const tzS = Number(get('second'));
-      const constructedMs = Date.UTC(tzY, tzM - 1, tzD, tzH, tzMin, tzS, 0);
-      const offsetMinutes = Math.round((constructedMs - naiveUtcMs) / 60000);
-      const trueUtcMs = naiveUtcMs - offsetMinutes * 60000;
-      return new Date(trueUtcMs).toISOString();
-    };
 
     // Find departure date (first line after "Depart")
     const idxDepart = lines.findIndex(l => /^Depart\b/i.test(l));
@@ -375,7 +263,7 @@ class UnitedWebParser extends BaseLegParser {
 
     // Find departure location (next non-empty line after departure time)
     const depLocLine = idxDepart >= 0 && idxDepart + 3 < lines.length ? lines[idxDepart + 3] : '';
-    const depLoc = extractAirportCode(depLocLine);
+    const depLoc = extractAirportCodeFromWeb(depLocLine);
 
     // Update departure timezone context based on departure location
     if (depLoc) {
@@ -401,7 +289,7 @@ class UnitedWebParser extends BaseLegParser {
 
     // Find arrival location (next non-empty line after arrival time)
     const arrLocLine = idxArrive >= 0 && idxArrive + 3 < lines.length ? lines[idxArrive + 3] : '';
-    const arrLoc = extractAirportCode(arrLocLine);
+    const arrLoc = extractAirportCodeFromWeb(arrLocLine);
 
     // Update arrival timezone context based on arrival location
     if (arrLoc) {
@@ -466,62 +354,7 @@ class UnitedEmailParser2 extends BaseLegParser {
     let departureTimezoneContext = currentTimezone;
     let arrivalTimezoneContext = currentTimezone;
 
-    // Helper: parse hh:mm AM/PM to 24h
-    const parseTime = (t) => {
-      const mm = String(t || '').trim().match(/^(\d{1,2}):(\d{2})\s*([AP])M$/i);
-      if (!mm) return { hour: 0, minute: 0 };
-      let hour = parseInt(mm[1], 10);
-      const minute = parseInt(mm[2], 10);
-      const isPM = mm[3].toUpperCase() === 'P';
-      if (isPM && hour < 12) hour += 12;
-      if (!isPM && hour === 12) hour = 0;
-      return { hour, minute };
-    };
 
-    // Helper: parse date like "Tue, Aug 12, 2025"
-    const parseDate = (dateStr) => {
-      const match = dateStr.match(/^[A-Za-z]{3},\s*([A-Za-z]{3})\s+(\d{1,2}),\s*(\d{4})$/);
-      if (!match) return null;
-      const monthLookup = { Jan:0, Feb:1, Mar:2, Apr:3, May:4, Jun:5, Jul:6, Aug:7, Sep:8, Oct:9, Nov:10, Dec:11 };
-      const monthIndex = monthLookup[match[1]];
-      const day = parseInt(match[2], 10);
-      const year = parseInt(match[3], 10);
-      return { year, monthIndex, day };
-    };
-
-    // Helper: extract airport code from "City, State, Country (ABC)" format
-    const extractAirportCode = (locationStr) => {
-      const match = locationStr.match(/\(([A-Za-z]{3})\)$/);
-      return match ? match[1] : '';
-    };
-
-    // Helper: extract city description from "City, State, Country (ABC)" format
-    const extractCityDesc = (locationStr) => {
-      const parts = locationStr.split(',');
-      return parts[0] || '';
-    };
-
-    // Helper: convert wall-clock to UTC ISO using given timezone context
-    const toIsoInZone = (zone, year, monthIndex, day, hour, minute) => {
-      const naiveUtcMs = Date.UTC(year, monthIndex, day, hour, minute, 0, 0);
-      const dtf = new Intl.DateTimeFormat('en-US', {
-        timeZone: zone,
-        year: 'numeric', month: '2-digit', day: '2-digit',
-        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-      });
-      const parts = dtf.formatToParts(new Date(naiveUtcMs));
-      const get = (type) => parts.find(p => p.type === type)?.value;
-      const tzY = Number(get('year'));
-      const tzM = Number(get('month'));
-      const tzD = Number(get('day'));
-      const tzH = Number(get('hour'));
-      const tzMin = Number(get('minute'));
-      const tzS = Number(get('second'));
-      const constructedMs = Date.UTC(tzY, tzM - 1, tzD, tzH, tzMin, tzS, 0);
-      const offsetMinutes = Math.round((constructedMs - naiveUtcMs) / 60000);
-      const trueUtcMs = naiveUtcMs - offsetMinutes * 60000;
-      return new Date(trueUtcMs).toISOString();
-    };
 
     // Find confirmation number (optional)
     const idxConfirmation = lines.findIndex(l => /^Confirmation Number:\s*$/i.test(l));
