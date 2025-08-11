@@ -126,7 +126,8 @@ export function analyzeTrip(trip, legs) {
   output.push("Leg Details:");
   
   legs.forEach((leg, index) => {
-    output.push(leg.name);
+    const legDisplayName = leg.confirmation ? `${leg.name} (confirmation ${leg.confirmation})` : leg.name;
+    output.push(legDisplayName);
     
     const depTime = formatTimeWithZone(leg.departure_datetime, leg.departure_timezone || 'America/New_York');
     const depDate = formatShortDate(leg.departure_datetime, leg.departure_timezone || 'America/New_York');
