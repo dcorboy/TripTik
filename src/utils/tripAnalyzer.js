@@ -25,6 +25,9 @@ function calculateDuration(startDateTime, endDateTime, includeMinutes = false) {
     if (diffHours > 0) {
       result += `, ${diffHours} hour${diffHours > 1 ? 's' : ''}`;
     }
+    if (includeMinutes && diffMinutes > 0) {
+      result += `, ${diffMinutes} minute${diffMinutes > 1 ? 's' : ''}`;
+    }
   } else if (diffHours > 0) {
     result += `${diffHours} hour${diffHours > 1 ? 's' : ''}`;
     if (includeMinutes && diffMinutes > 0) {
@@ -148,7 +151,17 @@ export function analyzeTrip(trip, legs) {
     // Layover time (except for last leg)
     if (index < legs.length - 1) {
       const nextLeg = legs[index + 1];
-      const layoverDuration = calculateDuration(leg.arrival_datetime, nextLeg.departure_datetime);
+      // Determine if this layover exceeds the long stopover threshold
+      const arrivalTimeMs = new Date(leg.arrival_datetime).getTime();
+      const nextDepartureTimeMs = new Date(nextLeg.departure_datetime).getTime();
+      const layoverHours = (nextDepartureTimeMs - arrivalTimeMs) / (1000 * 60 * 60);
+      const includeLayoverMinutes = layoverHours <= LAYOVER_THRESHOLD_HOURS;
+
+      const layoverDuration = calculateDuration(
+        leg.arrival_datetime,
+        nextLeg.departure_datetime,
+        includeLayoverMinutes
+      );
       const arrivalLocation = leg.arrival_location || 'Unknown';
       output.push(`Time in ${arrivalLocation}: ${layoverDuration}.`);
     }
@@ -160,7 +173,7 @@ export function analyzeTrip(trip, legs) {
   for (let i = 0; i < legs.length - 1; i++) {
     const currentLeg = legs[i];
     const nextLeg = legs[i + 1];
-    const stopoverDuration = calculateDuration(currentLeg.arrival_datetime, nextLeg.departure_datetime);
+    const stopoverDuration = calculateDuration(currentLeg.arrival_datetime, nextLeg.departure_datetime, false);
     
     // Check if stopover duration is longer than threshold
     const arrivalTime = new Date(currentLeg.arrival_datetime);
