@@ -43,6 +43,7 @@ class DemoFlightParser extends BaseLegParser {
 }
 
 // GmailParser
+// Summary at the top of Gmail for travel email from carrier
 // Supports
 //   Leg Description
 //   Departure Date
@@ -52,7 +53,7 @@ class DemoFlightParser extends BaseLegParser {
 //   NO Departure Location
 //   NO Arrival Location
 //   Flight Number
-//   NO Confirmation
+//   Confirmation
 class GmailParser extends BaseLegParser {
   parse(text, { currentTimezone, tripId }) {
     const nowIso = new Date().toISOString();
@@ -158,6 +159,7 @@ class GmailParser extends BaseLegParser {
 }
 
 // UnitedEmailParser
+// Email titled "Your United Airlines booking confirmation"
 // Supports
 //   Leg Description
 //   Departure Date
@@ -272,8 +274,9 @@ class UnitedEmailParser extends BaseLegParser {
 }
 
 // UnitedWebParser
+// United website: My Trips > Info
 // Supports
-//   INFERRED Leg Description
+//   INFERRED Leg Description (concatenated from locations)
 //   Departure Date
 //   Departure Time
 //   Arrival Date
@@ -433,6 +436,164 @@ class UnitedWebParser extends BaseLegParser {
   }
 }
 
+// UnitedEmailParser2
+// United email subject "eTicket Itinerary and Receipt for Confirmation"
+// Supports
+//   INFERREDLeg Description (concatenated from locations)
+//   Departure Date
+//   Departure Time
+//   Arrival Date
+//   Arrival Time
+//   Departure Location
+//   Arrival Location
+//   Flight Number
+//   Confirmation (if included)
+class UnitedEmailParser2 extends BaseLegParser {
+  parse(text, { currentTimezone, tripId }) {
+    const lines = String(text).split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+    
+    // Timezone contexts initialized to currentTimezone
+    let departureTimezoneContext = currentTimezone;
+    let arrivalTimezoneContext = currentTimezone;
+
+    // Helper: parse hh:mm AM/PM to 24h
+    const parseTime = (t) => {
+      const mm = String(t || '').trim().match(/^(\d{1,2}):(\d{2})\s*([AP])M$/i);
+      if (!mm) return { hour: 0, minute: 0 };
+      let hour = parseInt(mm[1], 10);
+      const minute = parseInt(mm[2], 10);
+      const isPM = mm[3].toUpperCase() === 'P';
+      if (isPM && hour < 12) hour += 12;
+      if (!isPM && hour === 12) hour = 0;
+      return { hour, minute };
+    };
+
+    // Helper: parse date like "Tue, Aug 12, 2025"
+    const parseDate = (dateStr) => {
+      const match = dateStr.match(/^[A-Za-z]{3},\s*([A-Za-z]{3})\s+(\d{1,2}),\s*(\d{4})$/);
+      if (!match) return null;
+      const monthLookup = { Jan:0, Feb:1, Mar:2, Apr:3, May:4, Jun:5, Jul:6, Aug:7, Sep:8, Oct:9, Nov:10, Dec:11 };
+      const monthIndex = monthLookup[match[1]];
+      const day = parseInt(match[2], 10);
+      const year = parseInt(match[3], 10);
+      return { year, monthIndex, day };
+    };
+
+    // Helper: extract airport code from "City, State, Country (ABC)" format
+    const extractAirportCode = (locationStr) => {
+      const match = locationStr.match(/\(([A-Za-z]{3})\)$/);
+      return match ? match[1] : '';
+    };
+
+    // Helper: extract city description from "City, State, Country (ABC)" format
+    const extractCityDesc = (locationStr) => {
+      const parts = locationStr.split(',');
+      return parts[0] || '';
+    };
+
+    // Helper: convert wall-clock to UTC ISO using given timezone context
+    const toIsoInZone = (zone, year, monthIndex, day, hour, minute) => {
+      const naiveUtcMs = Date.UTC(year, monthIndex, day, hour, minute, 0, 0);
+      const dtf = new Intl.DateTimeFormat('en-US', {
+        timeZone: zone,
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+      });
+      const parts = dtf.formatToParts(new Date(naiveUtcMs));
+      const get = (type) => parts.find(p => p.type === type)?.value;
+      const tzY = Number(get('year'));
+      const tzM = Number(get('month'));
+      const tzD = Number(get('day'));
+      const tzH = Number(get('hour'));
+      const tzMin = Number(get('minute'));
+      const tzS = Number(get('second'));
+      const constructedMs = Date.UTC(tzY, tzM - 1, tzD, tzH, tzMin, tzS, 0);
+      const offsetMinutes = Math.round((constructedMs - naiveUtcMs) / 60000);
+      const trueUtcMs = naiveUtcMs - offsetMinutes * 60000;
+      return new Date(trueUtcMs).toISOString();
+    };
+
+    // Find confirmation number (optional)
+    const idxConfirmation = lines.findIndex(l => /^Confirmation Number:\s*$/i.test(l));
+    const confirmation = (idxConfirmation >= 0 && idxConfirmation + 1 < lines.length) ? lines[idxConfirmation + 1].trim() : null;
+
+    // Find flight line with carrier
+    const idxFlight = lines.findIndex(l => /^Flight\s+\d{1,2}\s+of\s+\d{1,2}\s+([A-Za-z]{2}\d{1,4})/i.test(l));
+    const carrierMatch = idxFlight >= 0 ? lines[idxFlight].match(/^Flight\s+\d{1,2}\s+of\s+\d{1,2}\s+([A-Za-z]{2}\d{1,4})/i) : null;
+    const carrier = carrierMatch ? carrierMatch[1] : '';
+
+    // Find the three lines with departure/arrival info
+    const infoStartIdx = idxFlight >= 0 ? idxFlight + 1 : 0;
+    const dateLine = infoStartIdx < lines.length ? lines[infoStartIdx] : '';
+    const timeLine = infoStartIdx + 1 < lines.length ? lines[infoStartIdx + 1] : '';
+    const locationLine = infoStartIdx + 2 < lines.length ? lines[infoStartIdx + 2] : '';
+
+    // Parse departure and arrival dates
+    const dateParts = dateLine.split(/\s{2,}/);
+    const depDateStr = dateParts[0] || '';
+    const arrDateStr = dateParts[1] || '';
+    const depDate = parseDate(depDateStr);
+    const arrDate = parseDate(arrDateStr);
+
+    // Parse departure and arrival times
+    const timeParts = timeLine.split(/\s{2,}/);
+    const depTimeStr = timeParts[0] || '';
+    const arrTimeStr = timeParts[1] || '';
+    const depTime = parseTime(depTimeStr);
+    const arrTime = parseTime(arrTimeStr);
+
+    // Parse departure and arrival locations
+    const locationParts = locationLine.split(/\s{2,}/);
+    const depLocationStr = locationParts[0] || '';
+    const arrLocationStr = locationParts[1] || '';
+    const depLoc = extractAirportCode(depLocationStr);
+    const arrLoc = extractAirportCode(arrLocationStr);
+    const depLocDesc = extractCityDesc(depLocationStr);
+    const arrLocDesc = extractCityDesc(arrLocationStr);
+
+    // Update timezone contexts based on airport locations
+    if (depLoc) {
+      const depTimezone = getTimezoneForLocation(depLoc);
+      if (depTimezone) {
+        departureTimezoneContext = depTimezone;
+      }
+    }
+    if (arrLoc) {
+      const arrTimezone = getTimezoneForLocation(arrLoc);
+      if (arrTimezone) {
+        arrivalTimezoneContext = arrTimezone;
+      }
+    }
+
+    // Convert to ISO strings
+    let departureISO = new Date().toISOString();
+    let arrivalISO = new Date().toISOString();
+
+    if (depDate && depTime.hour !== 0) {
+      departureISO = toIsoInZone(departureTimezoneContext, depDate.year, depDate.monthIndex, depDate.day, depTime.hour, depTime.minute);
+    }
+    if (arrDate && arrTime.hour !== 0) {
+      arrivalISO = toIsoInZone(arrivalTimezoneContext, arrDate.year, arrDate.monthIndex, arrDate.day, arrTime.hour, arrTime.minute);
+    }
+
+    // Create leg description by concatenating city descriptions
+    const legDescription = [depLocDesc, arrLocDesc].filter(Boolean).join(' to ');
+
+    return {
+      name: legDescription || 'United-Email2-Parsed',
+      departure_datetime: departureISO,
+      departure_location: depLoc,
+      departure_timezone: departureTimezoneContext,
+      arrival_datetime: arrivalISO,
+      arrival_location: arrLoc,
+      arrival_timezone: arrivalTimezoneContext,
+      carrier,
+      confirmation,
+      trip_id: tripId,
+    };
+  }
+}
+
 function classifyTextAndGetParser(text) {
   if (typeof text !== 'string') return new BaseLegParser();
   const trimmed = text.trim();
@@ -454,6 +615,13 @@ function classifyTextAndGetParser(text) {
   const hasUnitedWebHeader = trimmed.split(/\r?\n/).some(l => /^Depart\b/i.test(l.trim()))
   if (hasUnitedWebHeader) {
     return new UnitedWebParser();
+  }
+
+  // United email 2: any line starting with "Flight X of Y"
+  const hasUnitedEmail2Header = trimmed.split(/\r?\n/).some(l => /^Flight\s+\d{1,2}\s+of\s+\d{1,2}\b/i.test(l.trim()))
+  if (hasUnitedEmail2Header) {
+    console.log('using UnitedEmailParser2');
+    return new UnitedEmailParser2();
   }
 
   // Demo classifier: first non-whitespace token is "Flight" (case-insensitive)
