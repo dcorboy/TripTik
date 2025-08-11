@@ -681,3 +681,12 @@ body {
 .save-btn:hover {
     background: #0056b3;
 } 
+
+@media (max-width: 768px) {
+    /* Mobile styles go here */
+    .detail-container {
+      flex-direction: column;
+    }
+    .legs-container, .result {
+        width: auto
+    }
