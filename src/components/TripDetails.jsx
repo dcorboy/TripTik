@@ -354,7 +354,7 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
             <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
               No legs found for this trip. Add some legs to get started!
             </div>
-            <div className="add-leg-container">
+            <div className="btn-primary-container">
               <button
                 className="add-leg-btn"
                 onClick={handleAddLeg}
@@ -469,7 +469,7 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
               </div>
             ))}
             
-            <div className="add-leg-container">
+            <div className="btn-primary-container">
               <button
                 className="add-leg-btn"
                 onClick={handleAddLeg}
@@ -492,6 +492,22 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
           <div className="result">
             <div className="result-content">
               <pre>{analysisResult || 'No TripTik available'}</pre>
+            </div>
+            <div className="btn-primary-container">
+              <button
+                className="btn-primary"
+                onClick={() => {
+                  const textToCopy = analysisResult || 'No TripTik available';
+                  navigator.clipboard.writeText(textToCopy).then(() => {
+                    console.log('Copied to clipboard');
+                  }).catch(err => {
+                    console.error('Failed to copy: ', err);
+                  });
+                }}
+                title="Copy TripTik to clipboard"
+              >
+                Copy
+              </button>
             </div>
           </div>
         </div>

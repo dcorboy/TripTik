@@ -472,8 +472,29 @@ body {
     background-color: #f8d7da;
 }
 
+/* Shared button styles */
+.btn-primary {
+    background: var(--actionBGcolor);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+    background: #218838;
+}
+
+.btn-primary:active {
+    background: #1e7e34;
+}
+
 /* Add leg button */
-.add-leg-container {
+.btn-primary-container {
     padding: 20px;
     text-align: center;
     border-top: 1px solid #eee;
