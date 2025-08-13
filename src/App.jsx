@@ -8,7 +8,7 @@ const API_BASE = '/api';
 function App() {
   const [trips, setTrips] = useState([]);
   const [selectedTrip, setSelectedTrip] = useState(null);
-  const [printTrip, setPrintTrip] = useState(null);
+  const [renderTrip, setRenderTrip] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -16,15 +16,15 @@ function App() {
     fetchTrips();
   }, []);
 
-  // Check for print parameter in URL
+  // Check for render parameter in URL
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const printTripId = urlParams.get('print');
+    const renderTripId = urlParams.get('render');
     
-    if (printTripId && trips.length > 0) {
-      const trip = trips.find(t => t.id == printTripId);
+    if (renderTripId && trips.length > 0) {
+      const trip = trips.find(t => t.id == renderTripId);
       if (trip) {
-        setPrintTrip(trip);
+        setRenderTrip(trip);
       }
     }
   }, [trips]);
@@ -53,7 +53,7 @@ function App() {
 
   const handleBackToList = () => {
     setSelectedTrip(null);
-    setPrintTrip(null);
+    setRenderTrip(null);
   };
 
   const handleTripUpdate = (updatedTrip) => {
@@ -164,9 +164,9 @@ function App() {
 
   return (
     <div className="container">
-      {printTrip ? (
+      {renderTrip ? (
         <TripRender 
-          trip={printTrip} 
+          trip={renderTrip} 
           onBack={handleBackToList}
           apiBase={API_BASE}
         />

@@ -513,8 +513,8 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
               <button
                 className="btn-primary"
                 onClick={() => {
-                  const printUrl = `${window.location.origin}${window.location.pathname}?print=${trip.id}`;
-                  window.open(printUrl, '_blank');
+                  const renderUrl = `${window.location.origin}${window.location.pathname}?render=${trip.id}`;
+                  window.open(renderUrl, '_blank');
                 }}
                 title="Open print view in new tab"
               >

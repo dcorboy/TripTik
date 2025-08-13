@@ -107,8 +107,8 @@ function TripRender({ trip, onBack, apiBase }) {
       </div>
 
       {/* Full page-width container for output */}
-      <div className="print-container">
-        <div className="print-content">
+      <div className="render-container">
+        <div className="render-content">
           <pre>{analysisResult || 'No TripTik available'}</pre>
         </div>
       </div>
