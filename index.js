@@ -35,7 +35,7 @@ async function initializeApp() {
 
 // Root route
 app.get('/', (req, res) => {
-  res.send('Hello from AI!');
+  res.send('Hello from TripTik!');
 });
 
 // Mount routes

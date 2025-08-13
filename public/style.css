@@ -334,21 +334,6 @@ body {
     margin: 20px 0;
 }
 
-.back-button {
-    background: var(--buttonBGcolor);
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    margin-bottom: 20px;
-}
-
-.back-button:hover {
-    background: #5a6268;
-}
-
 /* Editable Field Styles */
 .editable-field {
     cursor: pointer;
@@ -503,10 +488,30 @@ body {
 }
 
 /* Add leg button */
-.btn-primary-container {
+.btn-centered-container {
     padding: 20px;
     text-align: center;
     border-top: 1px solid #eee;
+}
+
+/* Add leg button */
+.btn-left-container {
+    padding: 0 0 20px 0;
+    text-align: left;
+}
+
+.btn-secondary {
+    background: var(--buttonBGcolor);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
 }
 
 .add-leg-btn {

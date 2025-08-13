@@ -310,9 +310,11 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
 
   return (
     <div>
-      <button className="back-button" onClick={onBack}>
-        ← Back to Trips
-      </button>
+      <div className="btn-left-container">
+        <button className="btn-secondary" onClick={onBack}>
+          ← Back to Trips
+        </button>
+      </div>
       
       <div className="header">
         <h1>
@@ -354,7 +356,7 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
             <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
               No legs found for this trip. Add some legs to get started!
             </div>
-            <div className="btn-primary-container">
+            <div className="btn-centered-container">
               <button
                 className="add-leg-btn"
                 onClick={handleAddLeg}
@@ -471,7 +473,7 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
               </div>
             ))}
             
-            <div className="btn-primary-container">
+            <div className="btn-centered-container">
               <button
                 className="add-leg-btn"
                 onClick={handleAddLeg}
@@ -495,7 +497,7 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
             <div className="result-content">
               <pre>{analysisResult || 'No TripTik available'}</pre>
             </div>
-            <div className="btn-primary-container">
+            <div className="btn-centered-container">
               <button
                 className="btn-primary"
                 onClick={() => {

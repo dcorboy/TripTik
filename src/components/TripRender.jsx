@@ -125,13 +125,13 @@ function TripRender({ trip, onBack, apiBase }) {
       {/* First header */}
       <div className="header">
         <h1>TripTik</h1>
-        <p>Print View</p>
+        <p>Richtext render for copying or printing</p>
       </div>
 
       {/* Back to Trips button */}
-      <div className="btn-primary-container">
+      <div className="btn-left-container">
         <button
-          className="btn-primary"
+          className="btn-secondary"
           onClick={onBack}
           title="Back to trips list"
         >

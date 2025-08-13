@@ -175,7 +175,6 @@ class GmailParser extends BaseLegParser {
       arrival_timezone: arrivalTimezoneContext,
       carrier,
       confirmation: confirmationValue,
-      description: 'Gmail parsed',
       trip_id: tripId,
     };
   }
