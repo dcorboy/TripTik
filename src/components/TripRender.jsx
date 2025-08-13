@@ -50,7 +50,53 @@ function TripRender({ trip, onBack, apiBase }) {
   };
 
   const handlePrint = () => {
-    window.print();
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    const printContent = document.querySelector('.render-content').innerHTML;
+    
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${trip.name} - TripTik</title>
+          <style>
+            body {
+              font-family: 'Courier New', monospace;
+              font-size: 14px;
+              line-height: 1.6;
+              margin: 20px;
+              background: white;
+            }
+            pre {
+              margin: 0;
+              padding: 0;
+              background: none;
+              border: none;
+              font-family: inherit;
+              font-size: inherit;
+              line-height: inherit;
+              white-space: pre-wrap;
+              word-wrap: break-word;
+            }
+            @media print {
+              body { margin: 0; }
+            }
+          </style>
+        </head>
+        <body>
+          ${printContent}
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    printWindow.focus();
+    
+    // Wait for content to load, then print
+    printWindow.onload = () => {
+      printWindow.print();
+      printWindow.close();
+    };
   };
 
   if (loading) {
