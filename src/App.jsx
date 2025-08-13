@@ -56,6 +56,17 @@ function App() {
     setRenderTrip(null);
   };
 
+  const handleBackToTripDetails = () => {
+    // If we're in render mode, go back to trip details for the same trip
+    if (renderTrip) {
+      setSelectedTrip(renderTrip);
+      setRenderTrip(null);
+    } else {
+      // Otherwise go back to trip list
+      setSelectedTrip(null);
+    }
+  };
+
   const handleTripUpdate = (updatedTrip) => {
     // Update the trip in the trips list
     setTrips(prevTrips => 
@@ -167,7 +178,7 @@ function App() {
       {renderTrip ? (
         <TripRender 
           trip={renderTrip} 
-          onBack={handleBackToList}
+          onBack={handleBackToTripDetails}
           apiBase={API_BASE}
         />
       ) : selectedTrip ? (

@@ -489,13 +489,18 @@ body {
 
 /* Add leg button */
 .btn-centered-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1em;
     padding: 20px;
-    text-align: center;
     border-top: 1px solid #eee;
 }
 
 /* Add leg button */
 .btn-left-container {
+    display: flex;
+    gap: .5em;
     padding: 0 0 20px 0;
     text-align: left;
 }
@@ -541,7 +546,6 @@ body {
     font-size: 12px;
     padding: 9px;
     border-radius: 4px;
-    margin-bottom: 10px;
 }
 
 .pasted-leg-input::placeholder {

@@ -148,7 +148,7 @@ function TripRender({ trip, onBack, apiBase }) {
 
       {/* Second header */}
       <div className="header">
-        <h2>{trip.name}</h2>
+        <h1>{trip.name}</h1>
         {trip.description && <p>{trip.description}</p>}
       </div>
 

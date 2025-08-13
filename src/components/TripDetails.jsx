@@ -371,7 +371,7 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
                 value={pastedLegText}
                 onInput={(e) => setPastedLegText(e.target.value)}
                 onPaste={handlePastedLegTextPaste}
-                style={{ marginLeft: '10px', flex: '1 1 auto' }}
+                // style={{ flex: '1 1 auto' }}
               />
             </div>
           </div>
@@ -488,7 +488,7 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
                 value={pastedLegText}
                 onInput={(e) => setPastedLegText(e.target.value)}
                 onPaste={handlePastedLegTextPaste}
-                style={{ marginLeft: '10px', flex: '1 1 auto' }}
+                // style={{ flex: '1 1 auto' }}
               />
             </div>
           </div>
