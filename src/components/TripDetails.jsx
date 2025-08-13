@@ -510,6 +510,16 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
               >
                 Copy
               </button>
+              <button
+                className="btn-primary"
+                onClick={() => {
+                  const printUrl = `${window.location.origin}${window.location.pathname}?print=${trip.id}`;
+                  window.open(printUrl, '_blank');
+                }}
+                title="Open print view in new tab"
+              >
+                Print
+              </button>
             </div>
           </div>
         </div>

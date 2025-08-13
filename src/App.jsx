@@ -1,18 +1,33 @@
 import { useState, useEffect } from 'preact/hooks';
 import TripList from './components/TripList.jsx';
 import TripDetails from './components/TripDetails.jsx';
+import TripRender from './components/TripRender.jsx';
 
 const API_BASE = '/api';
 
 function App() {
   const [trips, setTrips] = useState([]);
   const [selectedTrip, setSelectedTrip] = useState(null);
+  const [printTrip, setPrintTrip] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchTrips();
   }, []);
+
+  // Check for print parameter in URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const printTripId = urlParams.get('print');
+    
+    if (printTripId && trips.length > 0) {
+      const trip = trips.find(t => t.id == printTripId);
+      if (trip) {
+        setPrintTrip(trip);
+      }
+    }
+  }, [trips]);
 
   const fetchTrips = async () => {
     try {
@@ -38,6 +53,7 @@ function App() {
 
   const handleBackToList = () => {
     setSelectedTrip(null);
+    setPrintTrip(null);
   };
 
   const handleTripUpdate = (updatedTrip) => {
@@ -148,26 +164,39 @@ function App() {
 
   return (
     <div className="container">
-      <div className="header">
-        <h1>TripTik</h1>
-        <p>Select a trip to view its details</p>
-      </div>
-      
-      {selectedTrip ? (
-        <TripDetails 
-          trip={selectedTrip} 
+      {printTrip ? (
+        <TripRender 
+          trip={printTrip} 
           onBack={handleBackToList}
           apiBase={API_BASE}
-          onTripUpdate={handleTripUpdate}
-          onLegsChange={handleLegsChange}
         />
+      ) : selectedTrip ? (
+        <>
+          <div className="header">
+            <h1>TripTik</h1>
+            <p>Select a trip to view its details</p>
+          </div>
+          <TripDetails 
+            trip={selectedTrip} 
+            onBack={handleBackToList}
+            apiBase={API_BASE}
+            onTripUpdate={handleTripUpdate}
+            onLegsChange={handleLegsChange}
+          />
+        </>
       ) : (
-        <TripList 
-          trips={trips} 
-          onTripSelect={handleTripSelect}
-          onAddTrip={handleAddTrip}
-          onDeleteTrip={handleDeleteTrip}
-        />
+        <>
+          <div className="header">
+            <h1>TripTik</h1>
+            <p>Select a trip to view its details</p>
+          </div>
+          <TripList 
+            trips={trips} 
+            onTripSelect={handleTripSelect}
+            onAddTrip={handleAddTrip}
+            onDeleteTrip={handleDeleteTrip}
+          />
+        </>
       )}
     </div>
   );
