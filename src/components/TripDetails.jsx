@@ -398,19 +398,21 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
                       className="leg-carrier"
                       placeholder="flight/ship"
                     />
+                  </div>
+                  <div className="leg-header-right">
                     <EditableField
                       value={leg.confirmation || ''}
                       onSave={(value) => handleLegUpdate(leg.id, 'confirmation', value)}
                       className="leg-conf"
                       placeholder="conf#"
                     />
+                    <button
+                      className="delete-leg-btn fa-solid fa-trash"
+                      onClick={() => handleLegDelete(leg.id)}
+                      title="Delete leg"
+                    >
+                    </button>
                   </div>
-                  <button
-                    className="delete-leg-btn fa-solid fa-trash"
-                    onClick={() => handleLegDelete(leg.id)}
-                    title="Delete leg"
-                  >
-                  </button>
                 </div>
                 
                 <div className="leg-details">
