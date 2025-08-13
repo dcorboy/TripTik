@@ -3,12 +3,42 @@ import TripList from './components/TripList.jsx';
 import TripDetails from './components/TripDetails.jsx';
 import TripRender from './components/TripRender.jsx';
 
+// Simple router hook
+function useRouter() {
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const [hasNavigated, setHasNavigated] = useState(false);
+
+  useEffect(() => {
+    // Replace the current history entry to clear any previous state
+    window.history.replaceState({ path: currentPath }, '', currentPath);
+    
+    const handlePopState = (event) => {
+      setCurrentPath(window.location.pathname);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [currentPath]);
+
+  const navigate = (path) => {
+    if (path !== currentPath) {
+      if (hasNavigated) {
+        // Only push to history if we've already navigated at least once
+        window.history.pushState({ path }, '', path);
+      }
+      setCurrentPath(path);
+      setHasNavigated(true);
+    }
+  };
+
+  return { currentPath, navigate };
+}
+
 const API_BASE = '/api';
 
 function App() {
+  const { currentPath, navigate } = useRouter();
   const [trips, setTrips] = useState([]);
-  const [selectedTrip, setSelectedTrip] = useState(null);
-  const [renderTrip, setRenderTrip] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -16,18 +46,31 @@ function App() {
     fetchTrips();
   }, []);
 
-  // Check for render parameter in URL
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const renderTripId = urlParams.get('render');
+  // Parse current route
+  const parseRoute = () => {
+    const pathParts = currentPath.split('/').filter(Boolean);
     
-    if (renderTripId && trips.length > 0) {
-      const trip = trips.find(t => t.id == renderTripId);
-      if (trip) {
-        setRenderTrip(trip);
+    if (pathParts.length === 0) {
+      return { type: 'list' };
+    }
+    
+    if (pathParts[0] === 'trip' && pathParts[1]) {
+      const tripId = parseInt(pathParts[1]);
+      const trip = trips.find(t => t.id === tripId);
+      
+      if (!trip) {
+        return { type: 'list' };
+      }
+      
+      if (pathParts[2] === 'render') {
+        return { type: 'render', trip };
+      } else {
+        return { type: 'details', trip };
       }
     }
-  }, [trips]);
+    
+    return { type: 'list' };
+  };
 
   const fetchTrips = async () => {
     try {
@@ -48,23 +91,15 @@ function App() {
   };
 
   const handleTripSelect = (trip) => {
-    setSelectedTrip(trip);
+    navigate(`/trip/${trip.id}`);
   };
 
   const handleBackToList = () => {
-    setSelectedTrip(null);
-    setRenderTrip(null);
+    navigate('/');
   };
 
-  const handleBackToTripDetails = () => {
-    // If we're in render mode, go back to trip details for the same trip
-    if (renderTrip) {
-      setSelectedTrip(renderTrip);
-      setRenderTrip(null);
-    } else {
-      // Otherwise go back to trip list
-      setSelectedTrip(null);
-    }
+  const handleBackToTripDetails = (trip) => {
+    navigate(`/trip/${trip.id}`);
   };
 
   const handleTripUpdate = (updatedTrip) => {
@@ -74,9 +109,6 @@ function App() {
         trip.id === updatedTrip.id ? updatedTrip : trip
       )
     );
-    
-    // Update the selected trip if it's the same one
-    setSelectedTrip(updatedTrip);
   };
 
   const handleLegsChange = async () => {
@@ -88,14 +120,6 @@ function App() {
       }
       const tripsData = await response.json();
       setTrips(tripsData);
-      
-      // Update the selected trip if it exists
-      if (selectedTrip) {
-        const updatedSelectedTrip = tripsData.find(trip => trip.id === selectedTrip.id);
-        if (updatedSelectedTrip) {
-          setSelectedTrip(updatedSelectedTrip);
-        }
-      }
     } catch (err) {
       console.error('Error refreshing trips:', err);
     }
@@ -142,9 +166,10 @@ function App() {
       // Remove the trip from the list
       setTrips(prevTrips => prevTrips.filter(trip => trip.id !== tripId));
       
-      // If the deleted trip was selected, clear the selection
-      if (selectedTrip && selectedTrip.id === tripId) {
-        setSelectedTrip(null);
+      // If the deleted trip was selected, go back to list
+      const currentRoute = parseRoute();
+      if (currentRoute.type !== 'list' && currentRoute.trip && currentRoute.trip.id === tripId) {
+        navigate('/');
       }
     } catch (err) {
       console.error('Error deleting trip:', err);
@@ -173,22 +198,24 @@ function App() {
     );
   }
 
+  const currentRoute = parseRoute();
+
   return (
     <div className="container">
-      {renderTrip ? (
+      {currentRoute.type === 'render' ? (
         <TripRender 
-          trip={renderTrip} 
-          onBack={handleBackToTripDetails}
+          trip={currentRoute.trip} 
+          onBack={() => handleBackToTripDetails(currentRoute.trip)}
           apiBase={API_BASE}
         />
-      ) : selectedTrip ? (
+      ) : currentRoute.type === 'details' ? (
         <>
           <div className="header">
             <h1>TripTik</h1>
             <p>Select a trip to view its details</p>
           </div>
           <TripDetails 
-            trip={selectedTrip} 
+            trip={currentRoute.trip} 
             onBack={handleBackToList}
             apiBase={API_BASE}
             onTripUpdate={handleTripUpdate}
