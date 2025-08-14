@@ -586,14 +586,14 @@ body {
 .render-content .trip-header {
     font-size: 1.5em;
     font-weight: bold;
-    margin-bottom: 10px;
+    margin-bottom: 0px;
     color: #333;
 }
 
 .render-content .section-header {
     font-size: 1.3em;
     font-weight: bold;
-    margin: 2em 0 10px 0;
+    margin: 0 0 10px 0;
     color: #555;
     border-bottom: 1px solid #eee;
     padding-bottom: 5px;
@@ -610,13 +610,13 @@ body {
 .render-content .departure-info,
 .render-content .arrival-info {
     font-family: 'Courier New', monospace;
-    /* margin: 3px 0; */
+    margin-left: .5em;
 }
 
 .render-content .trip-duration {
     font-weight: bold;
     color: #777;
-    margin-left: .5em
+    /* margin-left: .5em */
 }
 
 .render-content .leg-name {
@@ -676,6 +676,10 @@ body {
 
 .render-content .spacer {
     height: 8px;
+}
+
+.render-content .header-spacer {
+    height: 2em;
 }
 
 .render-content .divider {

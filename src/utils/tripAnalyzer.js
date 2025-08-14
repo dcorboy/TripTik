@@ -134,7 +134,7 @@ export function analyzeTrip(trip, legs, isRender = false) {
   }
 
   output.push("TripTik for " + trip.name, "trip-header");
-  // output.push('', "spacer");
+  output.push('', "header-spacer");
   output.push("Full trip:", "section-header");
   const firstLeg = legs[0];
   const lastLeg = legs[legs.length - 1];
@@ -159,7 +159,8 @@ export function analyzeTrip(trip, legs, isRender = false) {
     const duration = calculateDuration(firstLeg.departure_datetime, lastLeg.arrival_datetime, false); // No minutes for total trip
     output.push(`Duration: ${duration}`, "trip-duration");
   }
-  
+
+  output.push('', "header-spacer");
   output.push("Leg Details:", "section-header");
   
   legs.forEach((leg, index) => {
@@ -198,7 +199,7 @@ export function analyzeTrip(trip, legs, isRender = false) {
       );
       const arrivalLocation = leg.arrival_location || 'Unknown';
       output.push(`Time in ${arrivalLocation}: ${layoverDuration}.`, "layover-info");
-      output.push('', "spacer a");
+      output.push('', "spacer");
     }
   });
 
@@ -225,6 +226,7 @@ export function analyzeTrip(trip, legs, isRender = false) {
   }
 
   if (longStopovers.length > 0) {
+    output.push('', "header-spacer");
     output.push("Destination Details:", "section-header");
     longStopovers.forEach((stopover, index) => {
       output.push(`Detail for ${stopover.location}`, "destination-header");
