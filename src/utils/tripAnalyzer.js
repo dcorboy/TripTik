@@ -134,7 +134,7 @@ export function analyzeTrip(trip, legs, isRender = false) {
   }
 
   output.push("TripTik for " + trip.name, "trip-header");
-  output.push('', "spacer");
+  // output.push('', "spacer");
   output.push("Full trip:", "section-header");
   const firstLeg = legs[0];
   const lastLeg = legs[legs.length - 1];
@@ -160,7 +160,6 @@ export function analyzeTrip(trip, legs, isRender = false) {
     output.push(`Duration: ${duration}`, "trip-duration");
   }
   
-  output.push('', "spacer");
   output.push("Leg Details:", "section-header");
   
   legs.forEach((leg, index) => {
@@ -181,10 +180,10 @@ export function analyzeTrip(trip, legs, isRender = false) {
     
     const legDuration = calculateDuration(leg.departure_datetime, leg.arrival_datetime, true); // Include minutes for leg duration
     output.push(`(${legDuration})`, "leg-duration");
-    output.push('', "spacer");
     
     // Layover time (except for last leg)
     if (index < legs.length - 1) {
+      output.push('', "spacer");
       const nextLeg = legs[index + 1];
       // Determine if this layover exceeds the long stopover threshold
       const arrivalTimeMs = new Date(leg.arrival_datetime).getTime();
@@ -199,8 +198,8 @@ export function analyzeTrip(trip, legs, isRender = false) {
       );
       const arrivalLocation = leg.arrival_location || 'Unknown';
       output.push(`Time in ${arrivalLocation}: ${layoverDuration}.`, "layover-info");
+      output.push('', "spacer a");
     }
-    output.push('', "spacer");
   });
 
   // Destination Details section for stopovers longer than threshold

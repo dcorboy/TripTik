@@ -54,37 +54,59 @@ function TripRender({ trip, onBack, apiBase }) {
     const printWindow = window.open('', '_blank');
     const printContent = document.querySelector('.render-content').innerHTML;
     
+    // Get the current CSS styles
+    const styleSheets = Array.from(document.styleSheets);
+    let cssText = '';
+    
+    styleSheets.forEach(sheet => {
+      try {
+        const rules = Array.from(sheet.cssRules || sheet.rules);
+        rules.forEach(rule => {
+          cssText += rule.cssText + '\n';
+        });
+      } catch (e) {
+        // Skip external stylesheets that might cause CORS issues
+        console.log('Skipping external stylesheet:', e);
+      }
+    });
+    
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
         <head>
           <title>${trip.name} - TripTik</title>
           <style>
+            ${cssText}
+            
+            /* Print-specific overrides */
             body {
-              font-family: 'Courier New', monospace;
-              font-size: 14px;
-              line-height: 1.6;
               margin: 20px;
               background: white;
             }
-            pre {
+            
+            .render-content {
+              width: 100%;
+              max-width: none;
               margin: 0;
               padding: 0;
-              background: none;
-              border: none;
-              font-family: inherit;
-              font-size: inherit;
-              line-height: inherit;
-              white-space: pre-wrap;
-              word-wrap: break-word;
             }
+            
             @media print {
-              body { margin: 0; }
+              body { 
+                margin: 0; 
+                font-size: 12px;
+              }
+              
+              .render-content {
+                padding: 0;
+              }
             }
           </style>
         </head>
         <body>
-          ${printContent}
+          <div class="render-content">
+            ${printContent}
+          </div>
         </body>
       </html>
     `);
