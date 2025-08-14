@@ -81,7 +81,7 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
   };
 
   const updateAnalysis = (currentLegs) => {
-    const result = analyzeTrip(currentTrip, currentLegs);
+    const result = analyzeTrip(currentTrip, currentLegs, false);
     setAnalysisResult(result);
   };
 

@@ -582,6 +582,101 @@ body {
     line-height: inherit;
 }
 
+/* Render content HTML styling */
+.render-content .trip-header {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.render-content .section-header {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin: 15px 0 10px 0;
+    color: #555;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+.render-content .trip-dates {
+    font-weight: bold;
+    color: #666;
+    margin: 5px 0;
+}
+
+.render-content .departure-info,
+.render-content .arrival-info {
+    font-family: 'Courier New', monospace;
+    margin: 3px 0;
+}
+
+.render-content .trip-duration {
+    font-weight: bold;
+    color: #444;
+    margin: 8px 0;
+}
+
+.render-content .leg-name {
+    font-weight: bold;
+    color: #333;
+    margin: 10px 0 5px 0;
+}
+
+.render-content .leg-departure,
+.render-content .leg-arrival {
+    font-family: 'Courier New', monospace;
+    margin: 2px 0;
+    color: #555;
+}
+
+.render-content .leg-duration {
+    font-style: italic;
+    color: #666;
+    margin: 5px 0;
+}
+
+.render-content .layover-info {
+    color: #777;
+    font-style: italic;
+    margin: 5px 0;
+}
+
+.render-content .destination-header {
+    font-weight: bold;
+    color: #333;
+    margin: 10px 0 5px 0;
+}
+
+.render-content .destination-duration {
+    font-weight: bold;
+    color: #555;
+    margin: 5px 0;
+}
+
+.render-content .destination-arrival,
+.render-content .destination-departure {
+    font-family: 'Courier New', monospace;
+    margin: 2px 0;
+    color: #555;
+}
+
+.render-content .daily-breakdown {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    color: #666;
+    margin: 1px 0;
+}
+
+.render-content .spacer {
+    height: 8px;
+}
+
+.render-content .no-legs {
+    color: #999;
+    font-style: italic;
+}
+
 /* DateTime Picker Styles */
 .datetime-picker-overlay {
     position: fixed;

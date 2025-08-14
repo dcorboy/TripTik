@@ -1,6 +1,38 @@
 import { formatInTimezone, utcToLocal } from '../config/timezone.js';
 import { formatFullDate, formatShortDate, formatTimeWithZone } from './dateFormatters.js';
 
+/**
+ * Escape HTML to prevent XSS attacks
+ * @param {string} text - Text to escape
+ * @returns {string} - Escaped HTML text
+ */
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+/**
+ * Create output object that handles both text and HTML formats
+ * @param {boolean} isRender - Whether to output HTML format
+ * @returns {Object} - Output object with push and toString methods
+ */
+function createOutput(isRender) {
+  const lines = [];
+  
+  return {
+    push: (text, className = '') => {
+      if (isRender) {
+        const escapedText = escapeHtml(text);
+        lines.push(`<div class="${className}">${escapedText}</div>`);
+      } else {
+        lines.push(text);
+      }
+    },
+    toString: () => isRender ? lines.join('') : lines.join('\n')
+  };
+}
+
 const LAYOVER_THRESHOLD_HOURS = 8; // Stopovers longer than this will show detailed info
 
 /**
@@ -87,66 +119,68 @@ function generateDailyBreakdown(arrivalLeg, departureLeg) {
 }
 
 /**
- * Analyzes trip data and returns formatted text output
+ * Analyzes trip data and returns formatted output
  * @param {Object} trip - The trip object
  * @param {Array} legs - Array of leg objects for the trip
+ * @param {boolean} isRender - Whether to output HTML format (default: false)
  * @returns {string} - Formatted analysis output
  */
-export function analyzeTrip(trip, legs) {
-  let output = [];
+export function analyzeTrip(trip, legs, isRender = false) {
+  const output = createOutput(isRender);
+  
   if (legs.length === 0) {
-    output.push("No legs found for this trip.");
-    return output.join('\n');
+    output.push("No legs found for this trip.", "no-legs");
+    return output.toString();
   }
 
-  output.push("TripTik for " + trip.name);
-  output.push("Full trip:");
+  output.push("TripTik for " + trip.name, "trip-header");
+  output.push("Full trip:", "section-header");
   const firstLeg = legs[0];
   const lastLeg = legs[legs.length - 1];
   
   if (firstLeg && lastLeg) {
     const departureDate = formatFullDate(firstLeg.departure_datetime, firstLeg.departure_timezone || 'America/New_York');
     const arrivalDate = formatFullDate(lastLeg.arrival_datetime, lastLeg.arrival_timezone || 'America/New_York');
-    output.push(`${departureDate} - ${arrivalDate}`);
+    output.push(`${departureDate} - ${arrivalDate}`, "trip-dates");
     
     const depTime = formatTimeWithZone(firstLeg.departure_datetime, firstLeg.departure_timezone || 'America/New_York');
     const depDate = formatShortDate(firstLeg.departure_datetime, firstLeg.departure_timezone || 'America/New_York');
     const depLocation = firstLeg.departure_location || '';
     const depCarrier = firstLeg.carrier || '';
-    output.push(`DEP ${depLocation} ${depTime} ${depDate} (${depCarrier})`);
+    output.push(`DEP ${depLocation} ${depTime} ${depDate} (${depCarrier})`, "departure-info");
     
     const arrTime = formatTimeWithZone(lastLeg.arrival_datetime, lastLeg.arrival_timezone || 'America/New_York');
     const arrDate = formatShortDate(lastLeg.arrival_datetime, lastLeg.arrival_timezone || 'America/New_York');
     const arrLocation = lastLeg.arrival_location || '';
     const arrCarrier = lastLeg.carrier || '';
-    output.push(`ARR ${arrLocation} ${arrTime} ${arrDate} (${arrCarrier})`);
+    output.push(`ARR ${arrLocation} ${arrTime} ${arrDate} (${arrCarrier})`, "arrival-info");
     
     const duration = calculateDuration(firstLeg.departure_datetime, lastLeg.arrival_datetime, false); // No minutes for total trip
-    output.push(`Duration: ${duration}`);
+    output.push(`Duration: ${duration}`, "trip-duration");
   }
   
-  output.push('');
-  output.push("Leg Details:");
+  output.push('', "spacer");
+  output.push("Leg Details:", "section-header");
   
   legs.forEach((leg, index) => {
     const legDisplayName = leg.confirmation ? `${leg.name} (confirmation ${leg.confirmation})` : leg.name;
-    output.push(legDisplayName);
+    output.push(legDisplayName, "leg-name");
     
     const depTime = formatTimeWithZone(leg.departure_datetime, leg.departure_timezone || 'America/New_York');
     const depDate = formatShortDate(leg.departure_datetime, leg.departure_timezone || 'America/New_York');
     const depLocation = leg.departure_location || '';
     const depCarrier = leg.carrier || '';
-    output.push(`DEP ${depLocation} ${depTime} ${depDate} (${depCarrier})`);
+    output.push(`DEP ${depLocation} ${depTime} ${depDate} (${depCarrier})`, "leg-departure");
     
     const arrTime = formatTimeWithZone(leg.arrival_datetime, leg.arrival_timezone || 'America/New_York');
     const arrDate = formatShortDate(leg.arrival_datetime, leg.arrival_timezone || 'America/New_York');
     const arrLocation = leg.arrival_location || '';
     const arrCarrier = leg.carrier || '';
-    output.push(`ARR ${arrLocation} ${arrTime} ${arrDate}`);
+    output.push(`ARR ${arrLocation} ${arrTime} ${arrDate}`, "leg-arrival");
     
     const legDuration = calculateDuration(leg.departure_datetime, leg.arrival_datetime, true); // Include minutes for leg duration
-    output.push(`(${legDuration})`);
-    output.push('');
+    output.push(`(${legDuration})`, "leg-duration");
+    output.push('', "spacer");
     
     // Layover time (except for last leg)
     if (index < legs.length - 1) {
@@ -163,9 +197,9 @@ export function analyzeTrip(trip, legs) {
         includeLayoverMinutes
       );
       const arrivalLocation = leg.arrival_location || 'Unknown';
-      output.push(`Time in ${arrivalLocation}: ${layoverDuration}.`);
+      output.push(`Time in ${arrivalLocation}: ${layoverDuration}.`, "layover-info");
     }
-    output.push('');
+    output.push('', "spacer");
   });
 
   // Destination Details section for stopovers longer than threshold
@@ -191,24 +225,24 @@ export function analyzeTrip(trip, legs) {
   }
 
   if (longStopovers.length > 0) {
-    output.push("Destination Details:");
+    output.push("Destination Details:", "section-header");
     longStopovers.forEach((stopover, index) => {
-      output.push(`Detail for ${stopover.location}`);
-      output.push(stopover.duration);
+      output.push(`Detail for ${stopover.location}`, "destination-header");
+      output.push(stopover.duration, "destination-duration");
       
       // Show arrival leg
       const arrTime = formatTimeWithZone(stopover.arrivalLeg.arrival_datetime, stopover.arrivalLeg.arrival_timezone || 'America/New_York');
       const arrDate = formatShortDate(stopover.arrivalLeg.arrival_datetime, stopover.arrivalLeg.arrival_timezone || 'America/New_York');
       const arrLocation = stopover.arrivalLeg.arrival_location || '';
       const arrCarrier = stopover.arrivalLeg.carrier || '';
-      output.push(`ARR ${arrLocation} ${arrTime} ${arrDate} (${arrCarrier})`);
+      output.push(`ARR ${arrLocation} ${arrTime} ${arrDate} (${arrCarrier})`, "destination-arrival");
       
       // Show departure leg
       const depTime = formatTimeWithZone(stopover.departureLeg.departure_datetime, stopover.departureLeg.departure_timezone || 'America/New_York');
       const depDate = formatShortDate(stopover.departureLeg.departure_datetime, stopover.departureLeg.departure_timezone || 'America/New_York');
       const depLocation = stopover.departureLeg.departure_location || '';
       const depCarrier = stopover.departureLeg.carrier || '';
-      output.push(`DEP ${depLocation} ${depTime} ${depDate} (${depCarrier})`);
+      output.push(`DEP ${depLocation} ${depTime} ${depDate} (${depCarrier})`, "destination-departure");
       
       // Generate daily breakdown
       const dailyLines = generateDailyBreakdown(
@@ -217,14 +251,14 @@ export function analyzeTrip(trip, legs) {
       );
       
       dailyLines.forEach(line => {
-        output.push(line);
+        output.push(line, "daily-breakdown");
       });
       
       if (index < longStopovers.length - 1) {
-        output.push('');
+        output.push('', "spacer");
       }
     });
   }
 
-  return output.join('\n');
+  return output.toString();
 } 

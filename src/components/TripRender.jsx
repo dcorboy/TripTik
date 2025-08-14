@@ -45,7 +45,7 @@ function TripRender({ trip, onBack, apiBase }) {
   };
 
   const updateAnalysis = (currentLegs) => {
-    const result = analyzeTrip(trip, currentLegs);
+    const result = analyzeTrip(trip, currentLegs, true);
     setAnalysisResult(result);
   };
 
@@ -155,7 +155,7 @@ function TripRender({ trip, onBack, apiBase }) {
       {/* Full page-width container for output */}
       <div className="render-container">
         <div className="render-content">
-          <pre>{analysisResult || 'No TripTik available'}</pre>
+          <div dangerouslySetInnerHTML={{ __html: analysisResult || 'No TripTik available' }} />
         </div>
       </div>
     </div>
