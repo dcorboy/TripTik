@@ -134,6 +134,7 @@ export function analyzeTrip(trip, legs, isRender = false) {
   }
 
   output.push("TripTik for " + trip.name, "trip-header");
+  output.push('', "spacer");
   output.push("Full trip:", "section-header");
   const firstLeg = legs[0];
   const lastLeg = legs[legs.length - 1];
@@ -243,6 +244,8 @@ export function analyzeTrip(trip, legs, isRender = false) {
       const depLocation = stopover.departureLeg.departure_location || '';
       const depCarrier = stopover.departureLeg.carrier || '';
       output.push(`DEP ${depLocation} ${depTime} ${depDate} (${depCarrier})`, "destination-departure");
+
+      output.push('', "divider");
       
       // Generate daily breakdown
       const dailyLines = generateDailyBreakdown(

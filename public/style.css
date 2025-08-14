@@ -565,7 +565,7 @@ body {
 
 .render-content {
     width: 100%;
-    font-family: 'Courier New', monospace;
+    font-family: Arial, Helvetica, sans-serif;
     font-size: 14px;
     line-height: 1.6;
     white-space: pre-wrap;
@@ -591,7 +591,7 @@ body {
 }
 
 .render-content .section-header {
-    font-size: 1.2em;
+    font-size: 1.3em;
     font-weight: bold;
     margin: 15px 0 10px 0;
     color: #555;
@@ -600,24 +600,27 @@ body {
 }
 
 .render-content .trip-dates {
+    font-size: 1em;
     font-weight: bold;
-    color: #666;
+    font-style: normal;
+    color: #333;
     margin: 5px 0;
 }
 
 .render-content .departure-info,
 .render-content .arrival-info {
     font-family: 'Courier New', monospace;
-    margin: 3px 0;
+    /* margin: 3px 0; */
 }
 
-.render-content .trip-duration {
+.render-content .trip-duration, .render-content .destination-duration {
     font-weight: bold;
-    color: #444;
-    margin: 8px 0;
+    color: #777;
+    margin-left: .5em
 }
 
 .render-content .leg-name {
+    font-size: 1.2em;
     font-weight: bold;
     color: #333;
     margin: 10px 0 5px 0;
@@ -626,18 +629,19 @@ body {
 .render-content .leg-departure,
 .render-content .leg-arrival {
     font-family: 'Courier New', monospace;
-    margin: 2px 0;
-    color: #555;
+    /* margin: 2px 0; */
+    color: #000;
 }
 
 .render-content .leg-duration {
     font-style: italic;
-    color: #666;
-    margin: 5px 0;
+    color: #999;
+    margin: 0 0 5px .5em;
+    font-size: .9em;
 }
 
 .render-content .layover-info {
-    color: #777;
+    color: #666;
     font-style: italic;
     margin: 5px 0;
 }
@@ -645,31 +649,37 @@ body {
 .render-content .destination-header {
     font-weight: bold;
     color: #333;
-    margin: 10px 0 5px 0;
+    margin: 10px 0 0 0;
 }
 
 .render-content .destination-duration {
     font-weight: bold;
-    color: #555;
-    margin: 5px 0;
+    color: #999;
+    margin-bottom: 5px;
 }
 
 .render-content .destination-arrival,
 .render-content .destination-departure {
     font-family: 'Courier New', monospace;
-    margin: 2px 0;
-    color: #555;
+    /* margin: 2px 0; */
+    color: #000;
 }
 
 .render-content .daily-breakdown {
     font-family: 'Courier New', monospace;
     font-size: 0.9em;
-    color: #666;
-    margin: 1px 0;
+    color: #000;
+    margin-top: 5px;
 }
 
 .render-content .spacer {
     height: 8px;
+}
+
+.render-content .divider {
+    width: 30%;
+    height: 8px;
+    border-bottom: 1px solid #999;
 }
 
 .render-content .no-legs {
