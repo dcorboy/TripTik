@@ -163,9 +163,3 @@ The application includes comprehensive date and time handling with timezone awar
 Future enhancements could include:
 - User authentication and authorization
 - Search and filtering capabilities
-- Calendar integration
-- Timezone-aware notifications
-- Flight duration and layover calculations
-- Multi-timezone trip support
-- Rich text formatting in render view
-- Export to PDF functionality 

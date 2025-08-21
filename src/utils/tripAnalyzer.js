@@ -29,6 +29,11 @@ function createOutput(isRender) {
         lines.push(text);
       }
     },
+    pageBreak: () => {
+      if (isRender) {
+        lines.push('<div class="page-break"></div>');
+      }
+    },
     toString: () => isRender ? lines.join('') : lines.join('\n')
   };
 }
@@ -229,6 +234,7 @@ export function analyzeTrip(trip, legs, isRender = false) {
     output.push('', "header-spacer");
     output.push("Destination Details:", "section-header");
     longStopovers.forEach((stopover, index) => {
+      output.pageBreak();
       output.push(`Detail for ${stopover.location}`, "destination-header");
       output.push(stopover.duration, "destination-duration");
       
@@ -256,6 +262,7 @@ export function analyzeTrip(trip, legs, isRender = false) {
       
       dailyLines.forEach(line => {
         output.push(line, "daily-breakdown");
+        // output.push('', "divider");
       });
       
       if (index < longStopovers.length - 1) {

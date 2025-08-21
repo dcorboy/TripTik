@@ -668,10 +668,12 @@ body {
 }
 
 .render-content .daily-breakdown {
-    font-family: 'Courier New', monospace;
-    font-size: 0.9em;
+    /* font-family: 'Courier New', monospace; */
+    font-size: 1em;
     color: #000;
     margin-top: 5px;
+    padding-bottom: 2em;
+    border-bottom: 1px solid black;
 }
 
 .render-content .spacer {
@@ -691,6 +693,12 @@ body {
 .render-content .no-legs {
     color: #999;
     font-style: italic;
+}
+
+.render-content .page-break {
+    page-break-before: always;
+    break-before: page;
+    margin-top: 20px;
 }
 
 /* DateTime Picker Styles */
