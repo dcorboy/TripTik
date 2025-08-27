@@ -36,7 +36,7 @@ export function formatFullDate(dateTimeString, timezone) {
  * @param {string} timezone - IANA timezone identifier
  * @returns {string} - Formatted date string
  */
-export function formatShortDate(dateTimeString, timezone) {
+export function formatShortDate(dateTimeString, timezone, pad = false) {
   if (!dateTimeString) return '';
   
   const localDate = utcToLocal(timezone, dateTimeString);
@@ -47,8 +47,11 @@ export function formatShortDate(dateTimeString, timezone) {
     month: 'short',
     day: 'numeric'
   };
+
+  let dateStr = localDate.toLocaleDateString('en-US', options);
+  dateStr = pad ? dateStr.replace(/(\s)(\d)(?!\d)/, '$1 $2') : dateStr;
   
-  return localDate.toLocaleDateString('en-US', options);
+  return dateStr;
 }
 
 /**
@@ -78,22 +81,24 @@ export function formatCompactDate(dateTimeString, timezone) {
  * @param {string} timezone - IANA timezone identifier
  * @returns {string} - Formatted time string
  */
-export function formatTimeWithZone(dateTimeString, timezone) {
+export function formatTimeWithZone(dateTimeString, timezone, pad = false) {
   if (!dateTimeString) return '';
   
   const localDate = utcToLocal(timezone, dateTimeString);
   if (!localDate) return '';
   
-  const time = localDate.toLocaleTimeString('en-US', {
+  let time = localDate.toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true
   });
-  
-  // Get timezone abbreviation
-  const timezoneAbbr = getTimezoneAbbreviation(timezone);
-  
-  return `${time} (${timezoneAbbr})`;
+
+  if (pad) time = time.replace(/^(\d):/, ' $1:'); // space-pad 1-digit hour
+
+  const tz = getTimezoneAbbreviation(timezone) || '';
+  const needsPad = pad && tz.length === 2;
+
+  return `${time} (${tz})${needsPad ? ' ' : ''}`;
 }
 
 /**

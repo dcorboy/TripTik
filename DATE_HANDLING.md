@@ -79,10 +79,7 @@ All datetime values are stored in UTC (ISO 8601 format) to ensure:
 
 ## SQLite ORDER BY Compatibility
 
-SQLite's `ORDER BY` works perfectly with ISO 8601 datetime strings because:
-- They sort lexicographically in chronological order
-- No special date parsing required
-- Consistent across all timezones
+SQLite's `ORDER BY` is neccessary to sort leg lexicographically in chronological order.
 
 ### Example Query
 ```sql
@@ -155,12 +152,3 @@ VALUES ('Flight to Orlando', '2024-06-15T06:30:00.000Z', 'IAD', '2024-06-15T09:4
 4. **Global Travel**: Support international flights with timezone changes
 5. **User-Friendly Display**: Show times in local timezone
 6. **Data Integrity**: UTC storage prevents timezone confusion
-
-## Future Enhancements
-
-- Timezone selection per leg
-- Flight duration calculation
-- Layover time calculation
-- Multi-timezone trip support
-- Calendar integration
-- Timezone-aware notifications 

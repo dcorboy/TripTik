@@ -31,12 +31,12 @@ function EditableField({
     }
   }, [isEditing]);
 
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [isEditing]);
+  // useEffect(() => {
+  //   if (isEditing && inputRef.current) {
+  //     inputRef.current.focus();
+  //     inputRef.current.select();
+  //   }
+  // }, [isEditing]);
 
   const handleClick = () => {
     if (type === 'datetime-local') {

@@ -105,7 +105,7 @@ function generateDailyBreakdown(arrivalLeg, departureLeg) {
       const arrivalTime = formatTimeWithZone(arrivalLeg.arrival_datetime, arrivalLeg.arrival_timezone || 'America/New_York');
       const arrivalLocation = arrivalLeg.arrival_location || '';
       const arrivalCarrier = arrivalLeg.carrier || '';
-      dayLine += ` ${arrivalTime} ARR ${arrivalLocation} (${arrivalCarrier})`;
+      dayLine += ` ${arrivalTime} Arrive ${arrivalLocation} (${arrivalCarrier})`;
     }
     
     // Add departure info for last day
@@ -113,7 +113,7 @@ function generateDailyBreakdown(arrivalLeg, departureLeg) {
       const departureTime = formatTimeWithZone(departureLeg.departure_datetime, departureLeg.departure_timezone || 'America/New_York');
       const departureLocation = departureLeg.departure_location || '';
       const departureCarrier = departureLeg.carrier || '';
-      dayLine += ` ${departureTime} DEP ${departureLocation} (${departureCarrier})`;
+      dayLine += ` ${departureTime} Depart ${departureLocation} (${departureCarrier})`;
     }
     
     days.push(dayLine);
@@ -149,17 +149,17 @@ export function analyzeTrip(trip, legs, isRender = false) {
     const arrivalDate = formatFullDate(lastLeg.arrival_datetime, lastLeg.arrival_timezone || 'America/New_York');
     output.push(`${departureDate} - ${arrivalDate}`, "trip-dates");
     
-    const depTime = formatTimeWithZone(firstLeg.departure_datetime, firstLeg.departure_timezone || 'America/New_York');
-    const depDate = formatShortDate(firstLeg.departure_datetime, firstLeg.departure_timezone || 'America/New_York');
+    const depTime = formatTimeWithZone(firstLeg.departure_datetime, firstLeg.departure_timezone || 'America/New_York', true);
+    const depDate = formatShortDate(firstLeg.departure_datetime, firstLeg.departure_timezone || 'America/New_York', true);
     const depLocation = firstLeg.departure_location || '';
     const depCarrier = firstLeg.carrier || '';
-    output.push(`DEP ${depLocation} ${depTime} ${depDate} (${depCarrier})`, "departure-info");
+    output.push(`Depart ${depLocation} ${depTime} ${depDate} (${depCarrier})`, "departure-info");
     
-    const arrTime = formatTimeWithZone(lastLeg.arrival_datetime, lastLeg.arrival_timezone || 'America/New_York');
-    const arrDate = formatShortDate(lastLeg.arrival_datetime, lastLeg.arrival_timezone || 'America/New_York');
+    const arrTime = formatTimeWithZone(lastLeg.arrival_datetime, lastLeg.arrival_timezone || 'America/New_York', true);
+    const arrDate = formatShortDate(lastLeg.arrival_datetime, lastLeg.arrival_timezone || 'America/New_York', true);
     const arrLocation = lastLeg.arrival_location || '';
     const arrCarrier = lastLeg.carrier || '';
-    output.push(`ARR ${arrLocation} ${arrTime} ${arrDate} (${arrCarrier})`, "arrival-info");
+    output.push(`Arrive ${arrLocation} ${arrTime} ${arrDate} (${arrCarrier})`, "arrival-info");
     
     const duration = calculateDuration(firstLeg.departure_datetime, lastLeg.arrival_datetime, false); // No minutes for total trip
     output.push(`Duration: ${duration}`, "trip-duration");
@@ -172,14 +172,14 @@ export function analyzeTrip(trip, legs, isRender = false) {
     const legDisplayName = leg.confirmation ? `${leg.name} (confirmation ${leg.confirmation})` : leg.name;
     output.push(legDisplayName, "leg-name");
     
-    const depTime = formatTimeWithZone(leg.departure_datetime, leg.departure_timezone || 'America/New_York');
-    const depDate = formatShortDate(leg.departure_datetime, leg.departure_timezone || 'America/New_York');
+    const depTime = formatTimeWithZone(leg.departure_datetime, leg.departure_timezone || 'America/New_York', true);
+    const depDate = formatShortDate(leg.departure_datetime, leg.departure_timezone || 'America/New_York', true);
     const depLocation = leg.departure_location || '';
     const depCarrier = leg.carrier || '';
     output.push(`DEP ${depLocation} ${depTime} ${depDate} (${depCarrier})`, "leg-departure");
     
-    const arrTime = formatTimeWithZone(leg.arrival_datetime, leg.arrival_timezone || 'America/New_York');
-    const arrDate = formatShortDate(leg.arrival_datetime, leg.arrival_timezone || 'America/New_York');
+    const arrTime = formatTimeWithZone(leg.arrival_datetime, leg.arrival_timezone || 'America/New_York', true);
+    const arrDate = formatShortDate(leg.arrival_datetime, leg.arrival_timezone || 'America/New_York', true);
     const arrLocation = leg.arrival_location || '';
     const arrCarrier = leg.carrier || '';
     output.push(`ARR ${arrLocation} ${arrTime} ${arrDate}`, "leg-arrival");
@@ -239,15 +239,15 @@ export function analyzeTrip(trip, legs, isRender = false) {
       output.push(stopover.duration, "destination-duration");
       
       // Show arrival leg
-      const arrTime = formatTimeWithZone(stopover.arrivalLeg.arrival_datetime, stopover.arrivalLeg.arrival_timezone || 'America/New_York');
-      const arrDate = formatShortDate(stopover.arrivalLeg.arrival_datetime, stopover.arrivalLeg.arrival_timezone || 'America/New_York');
+      const arrTime = formatTimeWithZone(stopover.arrivalLeg.arrival_datetime, stopover.arrivalLeg.arrival_timezone || 'America/New_York', true);
+      const arrDate = formatShortDate(stopover.arrivalLeg.arrival_datetime, stopover.arrivalLeg.arrival_timezone || 'America/New_York', true);
       const arrLocation = stopover.arrivalLeg.arrival_location || '';
       const arrCarrier = stopover.arrivalLeg.carrier || '';
       output.push(`ARR ${arrLocation} ${arrTime} ${arrDate} (${arrCarrier})`, "destination-arrival");
       
       // Show departure leg
-      const depTime = formatTimeWithZone(stopover.departureLeg.departure_datetime, stopover.departureLeg.departure_timezone || 'America/New_York');
-      const depDate = formatShortDate(stopover.departureLeg.departure_datetime, stopover.departureLeg.departure_timezone || 'America/New_York');
+      const depTime = formatTimeWithZone(stopover.departureLeg.departure_datetime, stopover.departureLeg.departure_timezone || 'America/New_York', true);
+      const depDate = formatShortDate(stopover.departureLeg.departure_datetime, stopover.departureLeg.departure_timezone || 'America/New_York', true);
       const depLocation = stopover.departureLeg.departure_location || '';
       const depCarrier = stopover.departureLeg.carrier || '';
       output.push(`DEP ${depLocation} ${depTime} ${depDate} (${depCarrier})`, "destination-departure");
