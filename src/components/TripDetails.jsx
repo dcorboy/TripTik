@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'preact/hooks';
 import EditableField from './EditableField.jsx';
 import { analyzeTrip } from '../utils/tripAnalyzer.js';
-import { formatInTimezone, formatTimeInTimezone, formatDateInTimezone, setUserTimezone, getUserTimezone } from '../config/timezone.js';
+import { formatInTimezone, formatTimeInTimezone, formatDateInTimezone, getUserTimezone } from '../config/timezone.js';
 import { getTimezoneForLocation } from '../utils/locationTimezone.js';
 import TimezonePicker from './TimezonePicker.jsx';
 import { parseLegFromText } from '../utils/legTextInterpreter.js';
@@ -111,12 +111,7 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
     }
   };
 
-  const handleTimezoneChange = (newTimezone) => {
-    setUserTimezone(newTimezone);
-    setCurrentTimezone(newTimezone);
-    // Force re-analysis to update times
-    updateAnalysis(legs);
-  };
+
 
   const handleLegUpdate = async (legId, field, value) => {
     try {
@@ -334,10 +329,7 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
           />
         </p>
         <div className="timezone-info">
-          Times displayed in: <TimezonePicker 
-            value={currentTimezone}
-            onChange={handleTimezoneChange}
-          />
+          All times displayed in local time
         </div>
       </div>
 
