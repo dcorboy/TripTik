@@ -157,7 +157,7 @@ function TripRender({ trip, onBack, apiBase }) {
           onClick={onBack}
           title="Back to trips list"
         >
-          ← Back to Trips
+          ← Back to Trip
         </button>
         <button
           className="btn-primary"
