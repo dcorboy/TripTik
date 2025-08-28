@@ -10,7 +10,8 @@ function EditableField({
   placeholder = 'Click to edit',
   formatValue = (val) => val,
   parseValue = (val) => val,
-  timezone
+  timezone,
+  tabIndex
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
@@ -107,6 +108,7 @@ function EditableField({
         onKeyDown={handleKeyDown}
         className={`editable-input ${className}`}
         placeholder={placeholder}
+        tabIndex={tabIndex}
       />
     );
   }
@@ -117,6 +119,14 @@ function EditableField({
         onClick={handleClick}
         className={`editable-field ${className}`}
         title="Click to edit"
+        tabIndex={tabIndex}
+        role="button"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleClick();
+          }
+        }}
       >
         {formatValue(value) || placeholder}
       </span>

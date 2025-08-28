@@ -84,7 +84,7 @@ const TIMEZONE_OPTIONS = [
   { value: 'America/Montevideo', label: 'Montevideo (UYT/UYST)' }
 ];
 
-function TimezonePicker({ value, onChange, onClose }) {
+function TimezonePicker({ value, onChange, onClose, tabIndex }) {
   const [isOpen, setIsOpen] = useState(false);
   const pickerRef = useRef(null);
 
@@ -128,6 +128,14 @@ function TimezonePicker({ value, onChange, onClose }) {
         className="timezone-display"
         onClick={() => setIsOpen(!isOpen)}
         title="Click to change timezone"
+        tabIndex={tabIndex}
+        role="button"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setIsOpen(!isOpen);
+          }
+        }}
       >
         {currentTimezone.label}
         <span className="timezone-arrow">▼</span>

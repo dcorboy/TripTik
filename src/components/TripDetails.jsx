@@ -393,12 +393,14 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
                       onSave={(value) => handleLegUpdate(leg.id, 'name', value)}
                       className="leg-name"
                       placeholder="Leg name"
+                      tabIndex={leg.id * 10 + 1}
                     />
                     <EditableField
                       value={leg.carrier || ''}
                       onSave={(value) => handleLegUpdate(leg.id, 'carrier', value)}
                       className="leg-carrier"
                       placeholder="flight/ship"
+                      tabIndex={leg.id * 10 + 2}
                     />
                   </div>
                   <div className="leg-header-right">
@@ -407,11 +409,13 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
                       onSave={(value) => handleLegUpdate(leg.id, 'confirmation', value)}
                       className="leg-conf"
                       placeholder="conf#"
+                      tabIndex={leg.id * 10 + 3}
                     />
                     <button
                       className="delete-leg-btn fa-solid fa-trash"
                       onClick={() => handleLegDelete(leg.id)}
                       title="Delete leg"
+                      tabIndex={leg.id * 10 + 4}
                     >
                     </button>
                   </div>
@@ -425,6 +429,7 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
                       onSave={(value) => handleLegUpdate(leg.id, 'departure_location', value)}
                       className="location-value"
                       placeholder="Departure location"
+                      tabIndex={leg.id * 10 + 5}
                     />
                     <div className="datetime-container">
                       <EditableField
@@ -436,10 +441,12 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
                         className="time-value"
                         placeholder="Departure date/time"
                         timezone={leg.departure_timezone || 'America/New_York'}
+                        tabIndex={leg.id * 10 + 6}
                       />
                       <TimezonePicker
                         value={leg.departure_timezone || 'America/New_York'}
                         onChange={(timezone) => handleLegUpdate(leg.id, 'departure_timezone', timezone)}
+                        tabIndex={leg.id * 10 + 7}
                       />
                     </div>
                   </div>
@@ -451,6 +458,7 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
                       onSave={(value) => handleLegUpdate(leg.id, 'arrival_location', value)}
                       className="location-value"
                       placeholder="Arrival location"
+                      tabIndex={leg.id * 10 + 8}
                     />
                     <div className="datetime-container">
                       <EditableField
@@ -462,10 +470,12 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
                         className="time-value"
                         placeholder="Arrival date/time"
                         timezone={leg.arrival_timezone || 'America/New_York'}
+                        tabIndex={leg.id * 10 + 9}
                       />
                       <TimezonePicker
                         value={leg.arrival_timezone || 'America/New_York'}
                         onChange={(timezone) => handleLegUpdate(leg.id, 'arrival_timezone', timezone)}
+                        tabIndex={leg.id * 10 + 10}
                       />
                     </div>
                   </div>
