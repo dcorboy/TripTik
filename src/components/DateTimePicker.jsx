@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 
 function DateTimePicker({ value, onChange, onClose }) {
   const [selectedDate, setSelectedDate] = useState('');
@@ -6,6 +6,7 @@ function DateTimePicker({ value, onChange, onClose }) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(null);
   const pickerRef = useRef(null);
+  const selectedDayRef = useRef(null);
 
   useEffect(() => {
     if (value) {
@@ -39,6 +40,20 @@ function DateTimePicker({ value, onChange, onClose }) {
     }
   }, [value]);
 
+  const handleSave = useCallback(() => {
+    if (selectedDate && selectedTime) {
+      const [hours, minutes] = selectedTime.split(':');
+      const [year, month, day] = selectedDate.split('-').map(Number);
+      
+      // Create a local Date object
+      const localDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
+      
+      
+      onChange(localDate);
+    }
+    onClose();
+  }, [selectedDate, selectedTime, onChange, onClose]);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (pickerRef.current && !pickerRef.current.contains(event.target)) {
@@ -60,7 +75,25 @@ function DateTimePicker({ value, onChange, onClose }) {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [onClose]);
+  }, [onClose, handleSave]);
+
+  // Focus management when picker opens
+  useEffect(() => {
+    // Focus the picker container first, then the selected day
+    const timer = setTimeout(() => {
+      if (pickerRef.current) {
+        pickerRef.current.focus();
+        // Then focus the selected day after a brief delay
+        setTimeout(() => {
+          if (selectedDay && selectedDayRef.current) {
+            selectedDayRef.current.focus();
+          }
+        }, 5);
+      }
+    }, 10);
+    
+    return () => clearTimeout(timer);
+  }, [selectedDay]);
 
   const getDaysInMonth = (date) => {
     const year = date.getFullYear();
@@ -89,20 +122,6 @@ function DateTimePicker({ value, onChange, onClose }) {
     }
   };
 
-  const handleSave = () => {
-    if (selectedDate && selectedTime) {
-      const [hours, minutes] = selectedTime.split(':');
-      const [year, month, day] = selectedDate.split('-').map(Number);
-      
-      // Create a local Date object
-      const localDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
-      
-      
-      onChange(localDate);
-    }
-    onClose();
-  };
-
   const handleCancel = () => {
     onClose();
   };
@@ -129,7 +148,16 @@ function DateTimePicker({ value, onChange, onClose }) {
 
   return (
     <div className="datetime-picker-overlay">
-      <div className="datetime-picker" ref={pickerRef}>
+      <div 
+        className="datetime-picker" 
+        ref={pickerRef}
+        tabIndex={-1}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') {
+            onClose();
+          }
+        }}
+      >
         <div className="picker-header">
           <button onClick={prevMonth} className="month-nav">&lt;</button>
           <span className="current-month">
@@ -148,8 +176,17 @@ function DateTimePicker({ value, onChange, onClose }) {
             {days.map((day, index) => (
               <div
                 key={index}
+                ref={day === selectedDay ? selectedDayRef : null}
                 className={`calendar-day ${!day ? 'empty' : ''} ${day === selectedDay ? 'selected' : ''}`}
                 onClick={() => handleDateSelect(day)}
+                tabIndex={day === selectedDay ? 0 : -1}
+                role="button"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleDateSelect(day);
+                  }
+                }}
               >
                 {day}
               </div>

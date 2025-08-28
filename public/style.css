@@ -724,6 +724,10 @@ body {
     max-width: 350px;
 }
 
+.datetime-picker:focus {
+    outline: none;
+}
+
 .picker-header {
     display: flex;
     justify-content: space-between;
@@ -791,6 +795,11 @@ body {
 .calendar-day.selected {
     background-color: #007bff;
     color: white;
+}
+
+.calendar-day:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
 }
 
 .calendar-day.empty {
