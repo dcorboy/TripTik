@@ -40,9 +40,27 @@ function TripList({ trips, onTripSelect, onAddTrip, onDeleteTrip }) {
     );
   }
 
+  // Sort trips: trips with no dates first, then by start_date (earliest first)
+  const sortedTrips = [...trips].sort((a, b) => {
+    const aHasDates = a.start_date || a.end_date;
+    const bHasDates = b.start_date || b.end_date;
+    
+    // If one has dates and the other doesn't, put the one without dates first
+    if (aHasDates && !bHasDates) return 1;
+    if (!aHasDates && bHasDates) return -1;
+    
+    // If neither has dates, maintain original order
+    if (!aHasDates && !bHasDates) return 0;
+    
+    // If both have dates, sort by start_date (earliest first)
+    const aStart = a.start_date ? new Date(a.start_date) : new Date(a.end_date);
+    const bStart = b.start_date ? new Date(b.start_date) : new Date(b.end_date);
+    return bStart - aStart;
+  });
+
   return (
     <div className="trip-list">
-      {trips.map((trip) => (
+      {sortedTrips.map((trip) => (
         <div 
           key={trip.id} 
           className="trip-item"
