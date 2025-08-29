@@ -404,7 +404,7 @@ function TripDetails({ trip, onBack, apiBase, onTripUpdate, onLegsChange }) {
                       tabIndex={leg.id * 10 + 3}
                     />
                     <button
-                      className="delete-leg-btn fa-solid fa-trash"
+                      className="delete-btn fa-solid fa-trash"
                       onClick={() => handleLegDelete(leg.id)}
                       title="Delete leg"
                       tabIndex={leg.id * 10 + 4}

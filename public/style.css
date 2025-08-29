@@ -8,6 +8,7 @@
     --buttonBGcolor: #6c757d;
     --deleteBGcolor: #c3c3c3;
     --resultBGcolor: #f4f4f4;
+    --deleteBtnColor: #adadad;
     --resultTextColor: black;
     --titleFont: 1.2em Arial, sans-serif;
     --subtitleFont: 1.5em Arial, sans-serif;
@@ -174,6 +175,12 @@ body {
   margin-bottom: 0;
 }
 
+.trip-item.completed {
+  opacity: 0.6;
+  background-color: #e2e2e2
+  ;
+}
+
 .trip-header {
   display: flex;
   justify-content: space-between;
@@ -202,21 +209,6 @@ body {
   font-size: 12px;
   color: #888;
   font-style: italic;
-}
-
-.delete-trip-btn {
-  background: none;
-  border: none;
-  color: #dc3545;
-  cursor: pointer;
-  padding: 5px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-  font-size: 14px;
-}
-
-.delete-trip-btn:hover {
-  background-color: #f8d7da;
 }
 
 /* Add trip button */
@@ -451,19 +443,20 @@ body {
 }
 
 /* Delete button */
-.delete-leg-btn {
+.delete-btn {
     background: none;
     border: none;
     cursor: pointer;
     font-size: 12px;
     padding: 4px;
     border-radius: 4px;
-    transition: background-color 0.2s;
-    color: var(--deleteBGcolor);
+    transition: background-color 0.2s, color 0.2s;
+    color: var(--deleteBtnColor);
 }
 
-.delete-leg-btn:hover {
-    background-color: #f8d7da;
+.delete-btn:hover {
+    background-color: #999;
+    color: white;
 }
 
 /* Shared button styles */

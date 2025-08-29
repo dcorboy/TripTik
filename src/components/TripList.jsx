@@ -78,7 +78,7 @@ function TripList({ trips, onTripSelect, onAddTrip, onDeleteTrip }) {
               )}
             </div>
             <button
-              className="delete-trip-btn fa-solid fa-trash"
+              className="delete-btn fa-solid fa-trash"
               onClick={(e) => handleDeleteTrip(e, trip.id)}
               title="Delete trip"
             >
