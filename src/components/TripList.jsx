@@ -60,10 +60,14 @@ function TripList({ trips, onTripSelect, onAddTrip, onDeleteTrip }) {
 
   return (
     <div className="trip-list">
-      {sortedTrips.map((trip) => (
+      {sortedTrips.map((trip) => {
+        // Check if trip is completed (end_date has passed)
+        const isCompleted = trip.end_date && new Date(trip.end_date) < new Date();
+        
+        return (
         <div 
           key={trip.id} 
-          className="trip-item"
+          className={`trip-item ${isCompleted ? 'completed' : ''}`}
           onClick={() => onTripSelect(trip)}
         >
           <div className="trip-header">
@@ -86,7 +90,8 @@ function TripList({ trips, onTripSelect, onAddTrip, onDeleteTrip }) {
             </div>
           )}
         </div>
-      ))}
+        );
+      })}
       
       <div className="add-trip-container">
         <button
